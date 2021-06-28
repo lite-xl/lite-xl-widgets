@@ -14,7 +14,8 @@ local Widget = require "widget"
 local SingleLineDoc = Doc:extend()
 
 function SingleLineDoc:insert(line, col, text)
-  SingleLineDoc.super.insert(self, line, col, text and text:gsub("\n", ""))
+  text = text:gsub("\n", "")
+  SingleLineDoc.super.insert(self, line, col, text)
 end
 
 ---@class TextView
@@ -26,6 +27,8 @@ function TextView:new()
   self.gutter_width = style.padding.x / 2
   self.hide_lines_gutter = true
   self.gutter_text_brightness = 0
+  self.scrollable = true
+  self.font = "font"
 end
 
 function TextView:get_name()
@@ -74,6 +77,10 @@ function TextView:draw_line_gutter(idx, x, y)
   end
 
   TextView.super.draw_line_gutter(self, idx, x, y)
+end
+
+function TextView:draw_line_highlight()
+  -- no-op function to disable this functionality
 end
 
 function TextView:draw_line_body(idx, x, y)
@@ -157,8 +164,10 @@ function TextBox:new(parent, text)
   self:set_text(text or "")
 end
 
+--- Get the text displayed on the textbox.
+---@return string
 function TextBox:get_text()
-  self.textview:get_text()
+  return self.textview:get_text()
 end
 
 --- Set the text displayed on the textbox.
@@ -208,14 +217,29 @@ end
 
 function TextBox:draw()
   TextBox.super.draw(self)
+  self.textview.position.x = self.position.x
+  self.textview.position.y = self.position.y - (style.padding.y/2.5)
+  self.textview.size.x = self.size.x
+  self.textview.size.y = self.size.y - (style.padding.y * 2)
+
   renderer.set_clip_rect(
-    self.position.x, self.position.y,
-    self.size.x, self.size.y
+    self.position.x,
+    self.position.y,
+    self.size.x,
+    self.size.y
   )
-  self.textview.position = {x = self.position.x, y = self.position.y}
-  self.textview.position.y = self.position.y - (style.padding.y/2)
   self.textview:draw()
-  renderer.set_clip_rect(0, 0, system.get_window_size())
+  if self.parent then
+    renderer.set_clip_rect(
+      self.parent.position.x,
+      self.parent.position.y,
+      self.parent.size.x,
+      self.parent.size.y
+    )
+  else
+    local w, h = system.get_window_size()
+    renderer.set_clip_rect(0, 0, w, h)
+  end
 end
 
 
