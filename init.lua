@@ -177,6 +177,11 @@ function Widget:draw_border(x, y, w, h)
   )
 end
 
+function Widget:set_target_size(axis, value)
+  self.size[axis] = value
+  return true
+end
+
 function Widget:set_position(x, y)
   self.position.x = x + self.border.width
   self.position.y = y + self.border.width
