@@ -3,12 +3,11 @@
 --
 local core = require "core"
 local config = require "core.config"
-local common = require "core.common"
 local style = require "core.style"
 local Doc = require "core.doc"
 local DocView = require "core.docview"
 local View = require "core.view"
-local Widget = require "widgets.base"
+local Widget = require "widget"
 
 
 ---@class SingleLineDoc
@@ -18,7 +17,7 @@ function SingleLineDoc:insert(line, col, text)
   SingleLineDoc.super.insert(self, line, col, text and text:gsub("\n", ""))
 end
 
----@class CommandView
+---@class TextView
 local TextView = DocView:extend()
 
 function TextView:new()
@@ -142,53 +141,73 @@ function TextView:draw()
   self:draw_scrollbar()
 end
 
----@class WidgetTextBox : Widget
+---@class widget.textbox : widget
 ---@field private textview TextView
-local WidgetTextBox = Widget:extend()
+local TextBox = Widget:extend()
 
-function WidgetTextBox:new(parent, text)
-  WidgetTextBox.super.new(self, parent)
+function TextBox:new(parent, text)
+  TextBox.super.new(self, parent)
   self.textview = TextView()
   self.size.x = 200 + (style.padding.x * 2)
   self.size.y = self.font:get_height() + (style.padding.y * 2)
+
+  -- this widget is for text input
   self.input_text = true
+
+  self:set_text(text or "")
 end
 
-function WidgetTextBox:on_mouse_pressed(button, x, y, clicks)
-  WidgetTextBox.super.on_mouse_pressed(self, button, x, y, clicks)
+function TextBox:get_text()
+  self.textview:get_text()
+end
+
+--- Set the text displayed on the textbox.
+---@param text string
+---@param select boolean
+function TextBox:set_text(text, select)
+  self.textview:set_text(text, select)
+end
+
+--
+-- Events
+--
+
+function TextBox:on_mouse_pressed(button, x, y, clicks)
+  TextBox.super.on_mouse_pressed(self, button, x, y, clicks)
   self.textview:on_mouse_pressed(button, x, y, clicks)
 end
 
-function WidgetTextBox:on_mouse_released(button, x, y)
-  WidgetTextBox.super.on_mouse_released(self, button, x, y)
+function TextBox:on_mouse_released(button, x, y)
+  TextBox.super.on_mouse_released(self, button, x, y)
   self.textview:on_mouse_released(button, x, y)
 end
 
-function WidgetTextBox:on_mouse_moved(x, y, dx, dy)
-  WidgetTextBox.super.on_mouse_moved(self, x, y, dx, dy)
+function TextBox:on_mouse_moved(x, y, dx, dy)
+  TextBox.super.on_mouse_moved(self, x, y, dx, dy)
   self.textview:on_mouse_moved(x, y, dx, dy)
 end
 
-function WidgetTextBox:activate()
+function TextBox:activate()
   self.border.color = style.caret
 end
 
-function WidgetTextBox:deactivate()
+function TextBox:deactivate()
   self.border.color = style.text
 end
 
-function WidgetTextBox:on_text_input(text)
-  WidgetTextBox.super.on_text_input(self, text)
+function TextBox:on_text_input(text)
+  TextBox.super.on_text_input(self, text)
   self.textview:on_text_input(text)
 end
 
-function WidgetTextBox:update()
-  WidgetTextBox.super.update(self)
+function TextBox:update()
+  TextBox.super.update(self)
   self.textview:update()
+  self.size.y = self.font:get_height() + (style.padding.y * 2)
 end
 
-function WidgetTextBox:draw()
-  WidgetTextBox.super.draw(self)
+function TextBox:draw()
+  TextBox.super.draw(self)
   renderer.set_clip_rect(
     self.position.x, self.position.y,
     self.size.x, self.size.y
@@ -200,4 +219,5 @@ function WidgetTextBox:draw()
 end
 
 
-return WidgetTextBox
+return TextBox
+

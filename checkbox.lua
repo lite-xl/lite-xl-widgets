@@ -5,57 +5,57 @@
 --
 
 local style = require "core.style"
-local Widget = require "widgets.base"
+local Widget = require "widget"
 
----@class WidgetCheckBox : Widget
+---@class widget.checkbox : widget
 ---@field private checked boolean
-local WidgetCheckBox = Widget:extend()
+local CheckBox = Widget:extend()
 
-function WidgetCheckBox:new(parent, label)
-  WidgetCheckBox.super.new(self, parent)
+function CheckBox:new(parent, label)
+  CheckBox.super.new(self, parent)
   self.checked = false
   self:set_label(label or "")
 end
 
-function WidgetCheckBox:set_label(text)
-  WidgetCheckBox.super.set_label(self, text)
+function CheckBox:set_label(text)
+  CheckBox.super.set_label(self, text)
 
   self.size.x = self.font:get_width(self.label) + (style.padding.x * 2)
   self.size.y = self.font:get_height() + (style.padding.y * 2)
 end
 
-function WidgetCheckBox:set_checked(checked)
+function CheckBox:set_checked(checked)
   self.checked = checked
 end
 
-function WidgetCheckBox:on_mouse_enter(...)
-  WidgetCheckBox.super.on_mouse_enter(self, ...)
+function CheckBox:on_mouse_enter(...)
+  CheckBox.super.on_mouse_enter(self, ...)
   self.foreground_color = style.accent
   self.background_color = style.dim
   system.set_cursor("hand")
 end
 
-function WidgetCheckBox:on_mouse_leave(...)
-  WidgetCheckBox.super.on_mouse_leave(self, ...)
+function CheckBox:on_mouse_leave(...)
+  CheckBox.super.on_mouse_leave(self, ...)
   self.foreground_color = style.text
   self.background_color = style.background
   system.set_cursor("arrow")
 end
 
-function WidgetCheckBox:on_click()
+function CheckBox:on_click()
   self.checked = not self.checked
   self:on_checked(self.checked)
 end
 
-function WidgetCheckBox:on_checked(checked) end
+function CheckBox:on_checked(checked) end
 
-function WidgetCheckBox:update()
-  WidgetCheckBox.super.update(self)
+function CheckBox:update()
+  CheckBox.super.update(self)
 
   --self:set_label(self.text)
 end
 
-function WidgetCheckBox:get_box_rect()
+function CheckBox:get_box_rect()
   local size = 1.6
   local fh = self.font:get_height() / size
   return
@@ -65,7 +65,7 @@ function WidgetCheckBox:get_box_rect()
     fh
 end
 
-function WidgetCheckBox:draw()
+function CheckBox:draw()
   local bx, by, bw, bh = self:get_box_rect()
 
   self:draw_border(bx, by, bw, bh)
@@ -86,4 +86,5 @@ function WidgetCheckBox:draw()
 end
 
 
-return WidgetCheckBox
+return CheckBox
+
