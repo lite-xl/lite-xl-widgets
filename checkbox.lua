@@ -20,8 +20,10 @@ end
 function CheckBox:set_label(text)
   CheckBox.super.set_label(self, text)
 
-  self.size.x = self.font:get_width(self.label) + (style.padding.x * 2)
-  self.size.y = self.font:get_height() + (style.padding.y * 2)
+  local bx, by, bw, bh = self:get_box_rect()
+
+  self.size.x = self.font:get_width(self.label) + bw + (style.padding.x / 2)
+  self.size.y = self.font:get_height()
 end
 
 function CheckBox:set_checked(checked)
@@ -52,7 +54,8 @@ function CheckBox:on_checked(checked) end
 function CheckBox:update()
   CheckBox.super.update(self)
 
-  --self:set_label(self.text)
+  -- update size
+  self:set_label(self.label)
 end
 
 function CheckBox:get_box_rect()
@@ -79,7 +82,7 @@ function CheckBox:draw()
   renderer.draw_text(
     self.font,
     self.label,
-    self.position.x + bw + 10,
+    self.position.x + bw + (style.padding.x / 2),
     self.position.y,
     self.foreground_color
   )
