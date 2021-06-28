@@ -36,6 +36,7 @@ local WidgetPosition = {}
 ---@field public childs table<integer,widget>
 ---@field public child_active widget
 ---@field public zindex integer
+---@field private next_zindex integer
 ---@field public border widget.border
 ---@field public foreground_color RendererColor
 ---@field public background_color RendererColor
@@ -48,6 +49,7 @@ local WidgetPosition = {}
 ---@field private label string
 ---@field private input_text boolean
 ---@field private textview widget
+---@field private mouse widget.position
 ---@field private mouse_is_pressed boolean
 ---@field private mouse_is_hovering boolean
 local Widget = View:extend()
@@ -58,7 +60,8 @@ function Widget:new(parent)
   self.parent = parent
   self.childs = {}
   self.child_active = nil
-  self.zindex = 0
+  self.zindex = nil
+  self.next_zindex = 1
   self.border = {
     width = 1,
     color = style.text
@@ -74,6 +77,7 @@ function Widget:new(parent)
   self.label = ""
   self.input_text = false
   self.textview = nil
+  self.mouse = {x = 0, y = 0}
 
   self.mouse_is_pressed = false
   self.mouse_is_hovering = false
@@ -139,8 +143,14 @@ end
 ---Add a child widget.
 ---@param child widget
 function Widget:add_child(child)
+  if not child.zindex then
+    child.zindex = self.next_zindex
+  end
+
   table.insert(self.childs, child)
   table.sort(self.childs, function(t1, t2) return t1.zindex < t2.zindex end)
+
+  self.next_zindex = self.next_zindex + 1
 end
 
 function Widget:show() self.visible = true end
@@ -168,7 +178,9 @@ function Widget:set_position(x, y)
   if self.parent then
     self.position.rx = x
     self.position.ry = y
+
     self.position.x = self.position.x + self.parent.position.x
+
     self.position.y = self.position.y + self.parent.position.y
   end
 
@@ -244,6 +256,14 @@ function Widget:swap_active_child(child)
   end
 end
 
+function Widget:get_scrollable_size()
+  local bottom_position = self.size.y
+  for _, child in pairs(self.childs) do
+    bottom_position = math.max(bottom_position, child:get_bottom())
+  end
+  return bottom_position
+end
+
 --
 -- Events
 --
@@ -265,6 +285,9 @@ function Widget:on_mouse_pressed(button, x, y, clicks)
   if not self.visible then return end
 
   if self:mouse_on_top(x, y) then
+    if Widget.super.on_mouse_pressed(self, button, x, y, clicks) then
+      return true
+    end
     self.mouse_is_pressed = true
     if self.draggable then
       self.position.dx = x - self.position.x
@@ -276,10 +299,11 @@ function Widget:on_mouse_pressed(button, x, y, clicks)
     return false
   end
 
-  Widget.super.on_mouse_pressed(self, button, x, y, clicks)
-
   for _, child in pairs(self.childs) do
-    child:on_mouse_pressed(button, x, y, clicks)
+    if child:mouse_on_top(x, y) then
+      child:on_mouse_pressed(button, x, y, clicks)
+      return true
+    end
   end
 
   return true
@@ -303,14 +327,15 @@ function Widget:on_mouse_released(button, x, y)
 
   self:swap_active_child()
 
-  for _, child in pairs(self.childs) do
-    if child:mouse_on_top(x, y) or child.mouse_is_pressed then
-      child:on_mouse_released(button, x, y)
-      if not self.dragged then
+  if not self.dragged then
+    for _, child in pairs(self.childs) do
+      if child:mouse_on_top(x, y) or child.mouse_is_pressed then
+        child:on_mouse_released(button, x, y)
         if child.input_text then
           self:swap_active_child(child)
         end
         child:on_click(button, x, y)
+        return true
       end
     end
   end
@@ -327,7 +352,17 @@ function Widget:activate() end
 function Widget:deactivate() end
 
 function Widget:on_mouse_moved(x, y, dx, dy)
-  if not self.visible then return false end
+  self.mouse.x = x
+  self.mouse.y = y
+
+  if self.visible then
+    Widget.super.on_mouse_moved(self, x, y, dx, dy)
+    if self.dragging_scrollbar then
+      return true
+    end
+  else
+    return
+  end
 
   local is_over = true
 
@@ -350,8 +385,6 @@ function Widget:on_mouse_moved(x, y, dx, dy)
     is_over = false
   end
 
-  Widget.super.on_mouse_moved(self, x, y, dx, dy)
-
   if self.mouse_is_pressed and self.draggable then
     self:drag(x, y)
     self.dragged = true
@@ -361,6 +394,7 @@ function Widget:on_mouse_moved(x, y, dx, dy)
   for _, child in pairs(self.childs) do
     if child:mouse_on_top(x, y) or child.mouse_is_hovering then
       child:on_mouse_moved(x, y, dx, dy)
+      break
     end
   end
 
@@ -371,6 +405,7 @@ function Widget:on_mouse_enter(x, y, dx, dy)
   for _, child in pairs(self.childs) do
     if child:mouse_on_top(x, y) then
       child:on_mouse_enter(x, y, dx, dy)
+      return
     end
   end
 end
@@ -379,20 +414,30 @@ function Widget:on_mouse_leave(x, y, dx, dy)
   for _, child in pairs(self.childs) do
     if child:mouse_on_top(x, y) then
       child:on_mouse_leave(x, y, dx, dy)
+      return
     end
   end
 end
 
 function Widget:on_mouse_wheel(y)
-  if not self.visible then return end
-
-  Widget.super.on_mouse_wheel(self.parent or self, y)
-
-  for _, child in pairs(self.childs) do
-    child:on_mouse_wheel(y)
+  if
+    not self.visible
+    or
+    not self:mouse_on_top(self.mouse.x, self.mouse.y)
+  then
+    return
   end
 
-  if self:mouse_on_top(0, 0) then
+  for _, child in pairs(self.childs) do
+    if child:mouse_on_top(self.mouse.x, self.mouse.y) then
+      if child:on_mouse_wheel(y) then
+        return true
+      end
+    end
+  end
+
+  if self.scrollable then
+    Widget.super.on_mouse_wheel(self, y)
     return true
   end
 
@@ -435,6 +480,10 @@ function Widget:draw()
   if #self.childs > 0 then
     local w, h = system.get_window_size()
     renderer.set_clip_rect(0, 0, w, h)
+  end
+
+  if self.scrollable then
+    self:draw_scrollbar()
   end
 
   return true

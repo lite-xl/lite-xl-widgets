@@ -20,6 +20,7 @@ widget.size.x = 300
 widget.size.y = 300
 widget.position.x = 100
 widget.draggable = true
+widget.scrollable = true
 
 ---@type widget.button
 local button = Button(widget, "Button1")
@@ -56,14 +57,34 @@ local textbox = TextBox(widget, "some text")
 textbox:set_position(10, label:get_bottom() + 10)
 textbox:set_tooltip("Texbox")
 
+---@type widget.button
+local button4 = Button(widget, "Button4")
+button4:set_position(10, textbox:get_bottom() + 10)
+button4:set_tooltip("Description 4")
+button4.on_click = on_button_click
+
+local button5 = Button(widget, "Button5")
+button5:set_position(10, button4:get_bottom() + 10)
+button5:set_tooltip("Description 5")
+button5.on_click = on_button_click
+
+local button6 = Button(widget, "Button6")
+button6:set_position(10, button5:get_bottom() + 10)
+button6:set_tooltip("Description 6")
+button6.on_click = on_button_click
+
 -- reposition items on scale changes
 widget.update = function(self)
   if Widget.update(self) then
+    button:set_position(10, 10)
     button2:set_position(10, button:get_bottom() + 10)
     button3:set_position(button:get_right() + 10, 10)
     checkbox:set_position(10, button2:get_bottom() + 10)
     label:set_position(10, checkbox:get_bottom() + 10)
     textbox:set_position(10, label:get_bottom() + 10)
+    button4:set_position(10, textbox:get_bottom() + 10)
+    button5:set_position(10, button4:get_bottom() + 10)
+    button6:set_position(10, button5:get_bottom() + 10)
   end
 end
 
