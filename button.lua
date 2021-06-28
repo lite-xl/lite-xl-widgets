@@ -8,18 +8,25 @@ local style = require "core.style"
 local Widget = require "widget"
 
 ---@class widget.button : widget
+---@field public padding widget.position
 local Button = Widget:extend()
 
 function Button:new(parent, label)
   Button.super.new(self, parent)
+
+  self.padding = {
+    x = style.padding.x,
+    y = style.padding.y
+  }
+
   self:set_label(label or "")
 end
 
 function Button:set_label(text)
   Button.super.set_label(self, text)
 
-  self.size.x = self.font:get_width(self.label) + (style.padding.x * 2)
-  self.size.y = self.font:get_height() + (style.padding.y * 2)
+  self.size.x = self.font:get_width(self.label) + (self.padding.x * 2)
+  self.size.y = self.font:get_height() + (self.padding.y * 2)
 end
 
 function Button:on_mouse_enter(...)
@@ -38,7 +45,7 @@ end
 
 function Button:update()
   Button.super.update(self)
-
+  -- update size
   self:set_label(self.label)
 end
 
@@ -48,8 +55,8 @@ function Button:draw()
   renderer.draw_text(
     self.font,
     self.label,
-    self.position.x + style.padding.x,
-    self.position.y + style.padding.y,
+    self.position.x + self.padding.x,
+    self.position.y + self.padding.y,
     self.foreground_color
   )
 end
