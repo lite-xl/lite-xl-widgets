@@ -142,7 +142,7 @@ function TextView:draw()
 end
 
 ---@class widget.textbox : widget
----@field private textview TextView
+---@field public textview TextView
 local TextBox = Widget:extend()
 
 function TextBox:new(parent, text)
