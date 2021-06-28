@@ -89,6 +89,7 @@ function Widget:new(parent)
     parent:add_child(self)
   else
     local this = self
+    local mouse_pressed_outside = false -- used to allow proper node resizing
     local root_view_on_mouse_pressed = RootView.on_mouse_pressed
     local root_view_on_mouse_released = RootView.on_mouse_released
     local root_view_on_mouse_moved = RootView.on_mouse_moved
@@ -97,20 +98,26 @@ function Widget:new(parent)
     local root_view_draw = RootView.draw
     local root_view_on_text_input = RootView.on_text_input
 
-    function RootView:on_mouse_pressed(...)
-      if not this:on_mouse_pressed(...) then
-        root_view_on_mouse_pressed(self, ...)
+    function RootView:on_mouse_pressed(button, x, y, clicks)
+      mouse_pressed_outside = not this:mouse_on_top(x, y)
+      if
+        mouse_pressed_outside
+        or
+        not this:on_mouse_pressed(button, x, y, clicks)
+      then
+        root_view_on_mouse_pressed(self, button, x, y, clicks)
       end
     end
 
     function RootView:on_mouse_released(...)
-      if not this:on_mouse_released(...) then
+      if mouse_pressed_outside or not this:on_mouse_released(...) then
         root_view_on_mouse_released(self, ...)
+        mouse_pressed_outside = false
       end
     end
 
     function RootView:on_mouse_moved(...)
-      if not this:on_mouse_moved(...) then
+      if mouse_pressed_outside or not this:on_mouse_moved(...) then
         root_view_on_mouse_moved(self, ...)
       end
     end
