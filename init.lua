@@ -11,14 +11,14 @@ local RootView = require "core.rootview"
 
 ---
 ---Represents the border of a widget.
----@class WidgetBorder
+---@class widget.border
 ---@field public width number
 ---@field public color RendererColor
 local WidgetBorder = {}
 
 ---
 ---Represents the position of a widget.
----@class WidgetPosition
+---@class widget.position
 ---@field public x number Real X
 ---@field public y number Real y
 ---@field public rx number Relative X
@@ -31,12 +31,12 @@ local WidgetPosition = {}
 ---@class widget @global
 ---@field public super widget
 ---@field public parent widget
----@field public position WidgetPosition
----@field public size WidgetPosition
+---@field public position widget.position
+---@field public size widget.position
 ---@field public childs table<integer,widget>
 ---@field public child_active widget
 ---@field public zindex integer
----@field public border WidgetBorder
+---@field public border widget.border
 ---@field public foreground_color RendererColor
 ---@field public background_color RendererColor
 ---@field public visible boolean
@@ -47,7 +47,7 @@ local WidgetPosition = {}
 ---@field private tooltip string
 ---@field private label string
 ---@field private input_text boolean
----@field private textview Widget
+---@field private textview widget
 ---@field private mouse_is_pressed boolean
 ---@field private mouse_is_hovering boolean
 local Widget = View:extend()
@@ -178,7 +178,7 @@ function Widget:set_position(x, y)
 end
 
 ---Get the relative position in relation to parent
----@return WidgetPosition
+---@return widget.position
 function Widget:get_position()
   local position = { x = self.position.x, y = self.position.y }
   if self.parent then

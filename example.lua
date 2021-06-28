@@ -7,6 +7,7 @@ local core = require "core"
 local Widget = require "widget"
 local Button = require "widget.button"
 local CheckBox = require "widget.checkbox"
+local Label = require "widget.label"
 local TextBox = require "widget.textbox"
 
 local function on_button_click(self)
@@ -46,9 +47,13 @@ checkbox.on_checked = function(_, checked)
   core.log_quiet(tostring(checked))
 end
 
+---@type widget.label
+local label = Label(widget, "Label:")
+label:set_position(10, checkbox:get_bottom() + 10)
+
 ---@type widget.textbox
 local textbox = TextBox(widget, "some text")
-textbox:set_position(10, checkbox:get_bottom() + 10)
+textbox:set_position(10, label:get_bottom() + 10)
 textbox:set_tooltip("Texbox")
 
 -- reposition items on scale changes
@@ -57,7 +62,8 @@ widget.update = function(self)
     button2:set_position(10, button:get_bottom() + 10)
     button3:set_position(button:get_right() + 10, 10)
     checkbox:set_position(10, button2:get_bottom() + 10)
-    textbox:set_position(10, checkbox:get_bottom() + 10)
+    label:set_position(10, checkbox:get_bottom() + 10)
+    textbox:set_position(10, label:get_bottom() + 10)
   end
 end
 
