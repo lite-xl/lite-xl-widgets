@@ -197,11 +197,11 @@ function TextBox:on_mouse_moved(x, y, dx, dy)
 end
 
 function TextBox:activate()
-  self.border.color = style.caret
+  self.hover_border = style.caret
 end
 
 function TextBox:deactivate()
-  self.border.color = style.text
+  self.hover_border = nil
 end
 
 function TextBox:on_text_input(text)
@@ -216,6 +216,7 @@ function TextBox:update()
 end
 
 function TextBox:draw()
+  self.border.color = self.hover_border or style.text
   TextBox.super.draw(self)
   self.textview.position.x = self.position.x
   self.textview.position.y = self.position.y - (style.padding.y/2.5)

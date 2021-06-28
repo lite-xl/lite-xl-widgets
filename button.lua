@@ -31,15 +31,15 @@ end
 
 function Button:on_mouse_enter(...)
   Button.super.on_mouse_enter(self, ...)
-  self.foreground_color = style.accent
-  self.background_color = style.dim
+  self.hover_text = style.accent
+  self.hover_back = style.dim
   system.set_cursor("hand")
 end
 
 function Button:on_mouse_leave(...)
   Button.super.on_mouse_leave(self, ...)
-  self.foreground_color = style.text
-  self.background_color = style.background
+  self.hover_text = nil
+  self.hover_back = nil
   system.set_cursor("arrow")
 end
 
@@ -50,6 +50,8 @@ function Button:update()
 end
 
 function Button:draw()
+  self.background_color = self.hover_back or style.background
+
   Button.super.draw(self)
 
   renderer.draw_text(
@@ -57,7 +59,7 @@ function Button:draw()
     self.label,
     self.position.x + self.padding.x,
     self.position.y + self.padding.y,
-    self.foreground_color
+    self.hover_text or self.foreground_color or style.text
   )
 end
 

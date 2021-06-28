@@ -3,6 +3,8 @@
 -- @copyright Jefferson Gonzalez
 -- @license MIT
 --
+
+local style = require "core.style"
 local Widget = require "widget"
 
 ---@class widget.label : widget
@@ -33,7 +35,7 @@ function Label:draw()
     self.label,
     self.position.x,
     self.position.y,
-    self.foreground_color
+    self.foreground_color or style.text
   )
 end
 

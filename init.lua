@@ -4,6 +4,7 @@
 -- @copyright Jefferson Gonzalez
 -- @license MIT
 --
+
 local core = require "core"
 local style = require "core.style"
 local View = require "core.view"
@@ -64,10 +65,10 @@ function Widget:new(parent)
   self.next_zindex = 1
   self.border = {
     width = 1,
-    color = style.text
+    color = nil
   }
-  self.foreground_color = style.text
-  self.background_color = parent and style.background or style.background2
+  self.foreground_color = nil
+  self.background_color = nil
   self.visible = parent and true or false
   self.has_focus = false
   self.draggable = false
@@ -158,6 +159,8 @@ function Widget:show() self.visible = true end
 function Widget:hide() self.visible = false end
 
 function Widget:draw_border(x, y, w, h)
+  if self.border.width <= 0 then return end
+
   x = x or self.position.x
   y = y or self.position.y
   w = w or self.size.x
@@ -168,7 +171,10 @@ function Widget:draw_border(x, y, w, h)
   w = w + (self.border.width * 2)
   h = h + (self.border.width * 2)
 
-  renderer.draw_rect(x, y, w + x % 1, h + y % 1, self.border.color)
+  renderer.draw_rect(
+    x, y, w + x % 1, h + y % 1,
+    self.border.color or style.text
+  )
 end
 
 function Widget:set_position(x, y)
@@ -368,6 +374,7 @@ function Widget:on_mouse_moved(x, y, dx, dy)
 
   if self:mouse_on_top(x, y) then
     if not self.mouse_is_hovering  then
+      system.set_cursor("arrow")
       self.mouse_is_hovering = true
       if #self.tooltip > 0 then
         core.status_view:show_tooltip(self.tooltip)
@@ -462,7 +469,14 @@ function Widget:draw()
   Widget.super.draw(self)
 
   self:draw_border()
-  self:draw_background(self.background_color)
+
+  if self.background_color then
+    self:draw_background(self.background_color)
+  else
+    self:draw_background(
+      self.parent and style.background or style.background2
+    )
+  end
 
   if #self.childs > 0 then
     renderer.set_clip_rect(

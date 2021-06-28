@@ -32,15 +32,15 @@ end
 
 function CheckBox:on_mouse_enter(...)
   CheckBox.super.on_mouse_enter(self, ...)
-  self.foreground_color = style.accent
-  self.background_color = style.dim
+  self.hover_text = style.accent
+  self.hover_back = style.dim
   system.set_cursor("hand")
 end
 
 function CheckBox:on_mouse_leave(...)
   CheckBox.super.on_mouse_leave(self, ...)
-  self.foreground_color = style.text
-  self.background_color = style.background
+  self.hover_text = nil
+  self.hover_back = nil
   system.set_cursor("arrow")
 end
 
@@ -73,7 +73,10 @@ function CheckBox:draw()
 
   self:draw_border(bx, by, bw, bh)
 
-  renderer.draw_rect(bx, by, bw, bh, self.background_color)
+  renderer.draw_rect(
+    bx, by, bw, bh,
+    self.hover_back or self.background_color or style.background
+  )
 
   if self.checked then
     renderer.draw_rect(bx + 2, by + 2, bw-4, bh-4, style.caret)
@@ -84,7 +87,7 @@ function CheckBox:draw()
     self.label,
     self.position.x + bw + (style.padding.x / 2),
     self.position.y,
-    self.foreground_color
+    self.hover_text or self.foreground_color or style.text
   )
 end
 
