@@ -7,6 +7,7 @@ local core = require "core"
 local Widget = require "widget"
 local Button = require "widget.button"
 local CheckBox = require "widget.checkbox"
+local Line = require "widget.line"
 local Label = require "widget.label"
 local TextBox = require "widget.textbox"
 
@@ -73,6 +74,10 @@ button6:set_position(10, button5:get_bottom() + 10)
 button6:set_tooltip("Description 6")
 button6.on_click = on_button_click
 
+---@type widget.line
+local line = Line(widget, 5)
+line:set_position(0, button6:get_bottom() + 10)
+
 -- reposition items on scale changes
 widget.update = function(self)
   if Widget.update(self) then
@@ -85,7 +90,15 @@ widget.update = function(self)
     button4:set_position(10, textbox:get_bottom() + 10)
     button5:set_position(10, button4:get_bottom() + 10)
     button6:set_position(10, button5:get_bottom() + 10)
+    line:set_position(0, button6:get_bottom() + 10)
   end
 end
 
 widget:show()
+widget.border.width = 1
+widget.draggable = true
+
+widget.target_size = 300
+
+-- local node = core.root_view:get_active_node()
+-- node:split("right", widget, {x=true}, true)

@@ -51,6 +51,7 @@ local WidgetPosition = {}
 ---@field private input_text boolean
 ---@field private textview widget
 ---@field private mouse widget.position
+---@field private prev_position widget.position
 ---@field private mouse_is_pressed boolean
 ---@field private mouse_is_hovering boolean
 local Widget = View:extend()
@@ -79,6 +80,7 @@ function Widget:new(parent)
   self.input_text = false
   self.textview = nil
   self.mouse = {x = 0, y = 0}
+  self.prev_position = {x = 0, y = 0}
 
   self.mouse_is_pressed = false
   self.mouse_is_hovering = false
@@ -105,6 +107,7 @@ function Widget:new(parent)
         or
         not this:on_mouse_pressed(button, x, y, clicks)
       then
+        this:swap_active_child()
         root_view_on_mouse_pressed(self, button, x, y, clicks)
       end
     end
@@ -196,11 +199,13 @@ function Widget:set_position(x, y)
   if self.parent then
     self.position.rx = x
     self.position.ry = y
-
+    local ox, oy = self.parent:get_content_offset()
     self.position.x = self.position.x + self.parent.position.x
-
-    self.position.y = self.position.y + self.parent.position.y
+    self.position.y = oy + self.position.y + self.parent.position.y
   end
+
+  self.prev_position.x = self.position.x
+  self.prev_position.y = self.position.y
 
   for _, child in pairs(self.childs) do
     child:set_position(child.position.rx, child.position.ry)
@@ -212,8 +217,8 @@ end
 function Widget:get_position()
   local position = { x = self.position.x, y = self.position.y }
   if self.parent then
-    position.x = math.abs(position.x - self.parent.position.x)
-    position.y = math.abs(position.y - self.parent.position.y)
+    position.x = self.position.rx
+    position.y = self.position.ry
   end
   return position
 end
@@ -466,7 +471,19 @@ end
 function Widget:update()
   if not self.visible then return end
 
-  Widget.super.update(self.parent or self)
+  Widget.super.update(self)
+
+  if
+    #self.childs > 0
+    and
+    (
+      self.position.x ~= self.prev_position.x
+      or
+      self.position.y ~= self.prev_position.y
+    )
+  then
+    self:set_position(self.position.x, self.position.y)
+  end
 
   for _, child in pairs(self.childs) do
     child:update()
@@ -491,7 +508,7 @@ function Widget:draw()
   end
 
   if #self.childs > 0 then
-    renderer.set_clip_rect(
+    core.push_clip_rect(
       self.position.x,
       self.position.y,
       self.size.x,
@@ -504,8 +521,7 @@ function Widget:draw()
   end
 
   if #self.childs > 0 then
-    local w, h = system.get_window_size()
-    renderer.set_clip_rect(0, 0, w, h)
+    core.pop_clip_rect()
   end
 
   if self.scrollable then

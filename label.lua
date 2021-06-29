@@ -8,7 +8,6 @@ local style = require "core.style"
 local Widget = require "widget"
 
 ---@class widget.label : widget
----@field private checked boolean
 local Label = Widget:extend()
 
 function Label:new(parent, label)

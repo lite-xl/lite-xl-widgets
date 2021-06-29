@@ -223,24 +223,14 @@ function TextBox:draw()
   self.textview.size.x = self.size.x
   self.textview.size.y = self.size.y - (style.padding.y * 2)
 
-  renderer.set_clip_rect(
+  core.push_clip_rect(
     self.position.x,
     self.position.y,
     self.size.x,
     self.size.y
   )
   self.textview:draw()
-  if self.parent then
-    renderer.set_clip_rect(
-      self.parent.position.x,
-      self.parent.position.y,
-      self.parent.size.x,
-      self.parent.size.y
-    )
-  else
-    local w, h = system.get_window_size()
-    renderer.set_clip_rect(0, 0, w, h)
-  end
+  core.pop_clip_rect()
 end
 
 
