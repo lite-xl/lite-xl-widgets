@@ -199,9 +199,11 @@ function Widget:set_position(x, y)
   if self.parent then
     self.position.rx = x
     self.position.ry = y
+
+    -- add offset to properly scroll
     local ox, oy = self.parent:get_content_offset()
-    self.position.x = self.position.x + self.parent.position.x
-    self.position.y = oy + self.position.y + self.parent.position.y
+    self.position.x = ox + self.position.x
+    self.position.y = oy + self.position.y
   end
 
   self.prev_position.x = self.position.x
