@@ -1,6 +1,7 @@
 --
 -- TextBox widget re-using code from lite's DocView.
 --
+
 local core = require "core"
 local config = require "core.config"
 local style = require "core.style"
@@ -10,7 +11,7 @@ local View = require "core.view"
 local Widget = require "widget"
 
 
----@class SingleLineDoc
+---@class widget.textbox.SingleLineDoc
 local SingleLineDoc = Doc:extend()
 
 function SingleLineDoc:insert(line, col, text)
@@ -18,13 +19,12 @@ function SingleLineDoc:insert(line, col, text)
   SingleLineDoc.super.insert(self, line, col, text)
 end
 
----@class TextView
+---@class widget.textbox.TextView
 local TextView = DocView:extend()
 
 function TextView:new()
   TextView.super.new(self, SingleLineDoc())
-  self.last_change_id = 0
-  self.gutter_width = style.padding.x / 2
+  self.gutter_width = 0
   self.hide_lines_gutter = true
   self.gutter_text_brightness = 0
   self.scrollable = true
@@ -51,31 +51,10 @@ function TextView:get_gutter_width()
   return self.gutter_width
 end
 
-function TextView:update()
-  -- scroll to make caret visible and reset blink timer if it moved
-  local line, col = self.doc:get_selection()
-  if (line ~= self.last_line or col ~= self.last_col) and self.size.x > 0 then
-    self:scroll_to_make_visible(line, col)
-    core.blink_reset()
-    self.last_line, self.last_col = line, col
-  end
-
-  -- update blink timer
-  local T, t0 = config.blink_period, core.blink_start
-  local ta, tb = core.blink_timer, system.get_time()
-  if ((tb - t0) % T < T / 2) ~= ((ta - t0) % T < T / 2) then
-    core.redraw = true
-  end
-  core.blink_timer = tb
-
-  DocView.super.update(self)
-end
-
 function TextView:draw_line_gutter(idx, x, y)
   if self.hide_lines_gutter then
     return
   end
-
   TextView.super.draw_line_gutter(self, idx, x, y)
 end
 
@@ -83,45 +62,7 @@ function TextView:draw_line_highlight()
   -- no-op function to disable this functionality
 end
 
-function TextView:draw_line_body(idx, x, y)
-  -- draw selection if it overlaps this line
-  for lidx, line1, col1, line2, col2 in self.doc:get_selections(true) do
-    if idx >= line1 and idx <= line2 then
-      local text = self.doc.lines[idx]
-      if line1 ~= idx then col1 = 1 end
-      if line2 ~= idx then col2 = #text + 1 end
-      local x1 = x + self:get_col_x_offset(idx, col1)
-      local x2 = x + self:get_col_x_offset(idx, col2)
-      local lh = self:get_line_height()
-      renderer.draw_rect(x1, y, x2 - x1, lh, style.selection)
-    end
-  end
-  for lidx, line1, col1, line2, col2 in self.doc:get_selections(true) do
-    -- draw line highlight if caret is on this line
-    if config.highlight_current_line and (line1 == line2 and col1 == col2)
-    and line1 == idx then
-      self:draw_line_highlight(x + self.scroll.x, y)
-    end
-  end
-
-  -- draw line's text
-  self:draw_line_text(idx, x, y)
-end
-
-function TextView:draw_overlay()
-  local minline, maxline = self:get_visible_line_range()
-  -- draw caret if it overlaps this line
-  local T = config.blink_period
-  for _, line, col in self.doc:get_selections() do
-    if line >= minline and line <= maxline
-    and (core.blink_timer - core.blink_start) % T < T / 2
-    and system.window_has_focus() then
-      local x, y = self:get_line_screen_position(line)
-      self:draw_caret(x + self:get_col_x_offset(line, col), y)
-    end
-  end
-end
-
+-- Overwrite this function just to disable the core.push_clip_rect
 function TextView:draw()
   self:draw_background(style.background)
 
@@ -149,7 +90,7 @@ function TextView:draw()
 end
 
 ---@class widget.textbox : widget
----@field public textview TextView
+---@field public textview widget.textbox.TextView
 local TextBox = Widget:extend()
 
 function TextBox:new(parent, text)
@@ -218,7 +159,7 @@ end
 function TextBox:draw()
   self.border.color = self.hover_border or style.text
   TextBox.super.draw(self)
-  self.textview.position.x = self.position.x
+  self.textview.position.x = self.position.x + (style.padding.x / 2)
   self.textview.position.y = self.position.y - (style.padding.y/2.5)
   self.textview.size.x = self.size.x
   self.textview.size.y = self.size.y - (style.padding.y * 2)
