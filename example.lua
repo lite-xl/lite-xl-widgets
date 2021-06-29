@@ -3,6 +3,7 @@
 -- @copyright Jefferson Gonzalez
 -- @license MIT
 --
+
 local core = require "core"
 local Widget = require "widget"
 local Button = require "widget.button"
@@ -41,6 +42,12 @@ button3:set_position(button:get_right() + 10, 10)
 button3:set_tooltip("Description 2")
 button3.on_click = on_button_click
 
+---@type widget.button
+local button23 = Button(widget, "Button23")
+button23:set_position(button:get_right() / 2, 10)
+button23:set_tooltip("Description 22")
+button23.on_click = on_button_click
+
 ---@type widget.checkbox
 local checkbox = CheckBox(widget, "Some Checkbox")
 checkbox:set_position(10, button2:get_bottom() + 10)
@@ -54,7 +61,7 @@ local label = Label(widget, "Label:")
 label:set_position(10, checkbox:get_bottom() + 10)
 
 ---@type widget.textbox
-local textbox = TextBox(widget, "some text")
+local textbox = TextBox(widget, "", "enter text...")
 textbox:set_position(10, label:get_bottom() + 10)
 textbox:set_tooltip("Texbox")
 
@@ -75,7 +82,7 @@ button6:set_tooltip("Description 6")
 button6.on_click = on_button_click
 
 ---@type widget.line
-local line = Line(widget, 5)
+local line = Line(widget)
 line:set_position(0, button6:get_bottom() + 10)
 
 -- reposition items on scale changes
@@ -83,6 +90,7 @@ widget.update = function(self)
   if Widget.update(self) then
     button:set_position(10, 10)
     button2:set_position(10, button:get_bottom() + 10)
+    button23:set_position(button:get_right() / 2, 10)
     button3:set_position(button:get_right() + 10, 10)
     checkbox:set_position(10, button2:get_bottom() + 10)
     label:set_position(10, checkbox:get_bottom() + 10)
@@ -95,10 +103,10 @@ widget.update = function(self)
 end
 
 widget:show()
-widget.border.width = 1
-widget.draggable = true
 
-widget.target_size = 300
-
+-- You can also add the widget as a lite node
+-- widget.border.width = 0
+-- widget.draggable = false
+-- widget.target_size = 250
 -- local node = core.root_view:get_active_node()
 -- node:split("right", widget, {x=true}, true)
