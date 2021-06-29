@@ -91,23 +91,34 @@ end
 
 ---@class widget.textbox : widget
 ---@field public textview widget.textbox.TextView
+---@field public placeholder string
+---@field private placeholder_active string
 local TextBox = Widget:extend()
 
-function TextBox:new(parent, text)
+function TextBox:new(parent, text, placeholder)
   TextBox.super.new(self, parent)
   self.textview = TextView()
   self.size.x = 200 + (style.padding.x * 2)
   self.size.y = self.font:get_height() + (style.padding.y * 2)
-
+  self.placeholder = placeholder or ""
+  self.placeholder_active = false
   -- this widget is for text input
   self.input_text = true
 
-  self:set_text(text or "")
+  if text ~= "" then
+    self.textview:set_text(text, select)
+  else
+    self.placeholder_active = true
+    self.textview:set_text(self.placeholder)
+  end
 end
 
 --- Get the text displayed on the textbox.
 ---@return string
 function TextBox:get_text()
+  if self.placeholder_active then
+    return ""
+  end
   return self.textview:get_text()
 end
 
@@ -139,10 +150,18 @@ end
 
 function TextBox:activate()
   self.hover_border = style.caret
+  if self.placeholder_active then
+    self:set_text("")
+    self.placeholder_active = false
+  end
 end
 
 function TextBox:deactivate()
   self.hover_border = nil
+  if self:get_text() == "" then
+    self:set_text(self.placeholder)
+    self.placeholder_active = true
+  end
 end
 
 function TextBox:on_text_input(text)
