@@ -146,6 +146,7 @@ end
 function TextBox:on_mouse_moved(x, y, dx, dy)
   TextBox.super.on_mouse_moved(self, x, y, dx, dy)
   self.textview:on_mouse_moved(x, y, dx, dy)
+  system.set_cursor("ibeam")
 end
 
 function TextBox:activate()
@@ -154,6 +155,7 @@ function TextBox:activate()
     self:set_text("")
     self.placeholder_active = false
   end
+  system.set_cursor("ibeam")
 end
 
 function TextBox:deactivate()
@@ -162,6 +164,7 @@ function TextBox:deactivate()
     self:set_text(self.placeholder)
     self.placeholder_active = true
   end
+  system.set_cursor("arrow")
 end
 
 function TextBox:on_text_input(text)

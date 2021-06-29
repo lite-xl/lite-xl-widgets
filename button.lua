@@ -33,14 +33,12 @@ function Button:on_mouse_enter(...)
   Button.super.on_mouse_enter(self, ...)
   self.hover_text = style.accent
   self.hover_back = style.dim
-  system.set_cursor("hand")
 end
 
 function Button:on_mouse_leave(...)
   Button.super.on_mouse_leave(self, ...)
   self.hover_text = nil
   self.hover_back = nil
-  system.set_cursor("arrow")
 end
 
 function Button:update()

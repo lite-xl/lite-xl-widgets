@@ -34,14 +34,12 @@ function CheckBox:on_mouse_enter(...)
   CheckBox.super.on_mouse_enter(self, ...)
   self.hover_text = style.accent
   self.hover_back = style.dim
-  system.set_cursor("hand")
 end
 
 function CheckBox:on_mouse_leave(...)
   CheckBox.super.on_mouse_leave(self, ...)
   self.hover_text = nil
   self.hover_back = nil
-  system.set_cursor("arrow")
 end
 
 function CheckBox:on_click()
