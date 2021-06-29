@@ -366,12 +366,6 @@ function Widget:on_text_input(text)
     return true
   end
 
-  for _, child in pairs(self.childs) do
-    if child:on_text_input(text) then
-      return true
-    end
-  end
-
   return false
 end
 
@@ -495,6 +489,7 @@ function Widget:on_mouse_moved(x, y, dx, dy)
           core.status_view:remove_tooltip()
         end
         child:on_mouse_leave(x, y, dx, dy)
+        system.set_cursor("arrow")
       end
     end
 
@@ -504,7 +499,7 @@ function Widget:on_mouse_moved(x, y, dx, dy)
     end
   end
 
-  if self:mouse_on_top(x, y) or self.mouse_is_pressed then
+  if self:mouse_on_top(x, y) or self.mouse_is_pressed or not self.parent then
     Widget.super.on_mouse_moved(self, x, y, dx, dy)
     if self.dragging_scrollbar then
       self.dragged = true
@@ -525,7 +520,8 @@ function Widget:on_mouse_moved(x, y, dx, dy)
       end
       self:on_mouse_enter(x, y, dx, dy)
     end
-  elseif not self.mouse_is_pressed then
+  else
+    self.mouse_is_hovering = false
     is_over = false
   end
 
