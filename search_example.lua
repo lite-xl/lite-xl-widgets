@@ -5,6 +5,7 @@
 --
 
 local core = require "core"
+local command = require "core.command"
 local Widget = require "widget"
 local Button = require "widget.button"
 local CheckBox = require "widget.checkbox"
@@ -103,3 +104,9 @@ widget.draggable = false
 widget.target_size = 250
 local node = core.root_view:get_active_node()
 node:split("right", widget, {x=true}, true)
+
+command.add(nil,{
+  ["find-widget:toggle"] = function()
+    widget:toggle_visible()
+  end
+})
