@@ -8,6 +8,7 @@
 local core = require "core"
 local style = require "core.style"
 local View = require "core.view"
+local DocView = require "core.docview"
 local RootView = require "core.rootview"
 
 ---
@@ -43,21 +44,22 @@ local WidgetPosition = {}
 ---@field public childs table<integer,widget>
 ---@field public child_active widget
 ---@field public zindex integer
----@field private next_zindex integer
 ---@field public border widget.border
+---@field public draggable boolean
+---@field public font renderer.font
 ---@field public foreground_color RendererColor
 ---@field public background_color RendererColor
----@field public visible boolean
+---@field private visible boolean
 ---@field private has_focus boolean
----@field private draggable boolean
 ---@field private dragged boolean
----@field private font renderer.font
 ---@field private tooltip string
 ---@field private label string
 ---@field private input_text boolean
 ---@field private textview widget
+---@field private next_zindex integer
 ---@field private mouse widget.position
 ---@field private prev_position widget.position
+---@field private prev_size widget.position
 ---@field private mouse_is_pressed boolean
 ---@field private mouse_is_hovering boolean
 local Widget = View:extend()
@@ -91,6 +93,7 @@ function Widget:new(parent)
   self.textview = nil
   self.mouse = {x = 0, y = 0}
   self.prev_position = {x = 0, y = 0}
+  self.prev_size = {x = 0, y = 0}
 
   self.mouse_is_pressed = false
   self.mouse_is_hovering = false
@@ -176,13 +179,45 @@ function Widget:add_child(child)
 end
 
 ---Show the widget.
-function Widget:show() self.visible = true end
+function Widget:show()
+  if not self.parent then
+    if self.size.x <= 0 or self.size.y <= 0 then
+      self.size.x = self.prev_size.x
+      self.size.y = self.prev_size.y
+    end
+    self.prev_size.x = 0
+    self.prev_size.y = 0
+  end
+  self.visible = true
+end
 
 ---Hide the widget.
-function Widget:hide() self.visible = false end
+function Widget:hide()
+  self.visible = false
+  -- we need to force size to zero on parent widget to properly hide it
+  -- when used as a lite node, otherwise the reserved space of the node
+  -- will stay visible and dragging will reveal empty space.
+  if not self.parent then
+    if self.size.x > 0 or self.size.y > 0 then
+      -- we only do this once to prevent issues of consecutive hide calls
+      if self.prev_size.x == 0 and self.prev_size.y == 0 then
+        self.prev_size.x = self.size.x
+        self.prev_size.y = self.size.y
+      end
+      self.size.x = 0
+      self.size.y = 0
+    end
+  end
+end
 
 ---Toggle visibility of widget.
-function Widget:toggle_visible() self.visible = not self.visible end
+function Widget:toggle_visible()
+  if not self.visible then
+    self:show()
+  else
+    self:hide()
+  end
+end
 
 ---Draw the widget configured border or custom one.
 ---@param x? number
@@ -212,6 +247,9 @@ end
 ---@param axis string | "'x'" | "'y'"
 ---@param value number
 function Widget:set_target_size(axis, value)
+  if not self.visible then
+    return false
+  end
   self.size[axis] = value
   return true
 end
@@ -219,10 +257,16 @@ end
 ---@param width integer
 ---@param height integer
 function Widget:set_size(width, height)
-  self.size.x = width
-  self.size.y = height
+  if not self.parent and not self.visible then
+    self.prev_size.x = width
+    self.prev_size.y = height
+  else
+    self.size.x = width
+    self.size.y = height
+  end
 end
 
+---Set the position of the widget and updates the child absolute coordinates
 ---@param x integer
 ---@param y integer
 function Widget:set_position(x, y)
@@ -334,8 +378,19 @@ function Widget:swap_active_child(child)
   self.child_active = child
 
   if child then
+    if
+      not self.prev_view
+      and
+      getmetatable(core.active_view) == DocView
+    then
+      self.prev_view = core.active_view
+    end
     self.child_active:activate()
     core.set_active_view(child.textview)
+  elseif self.prev_view then
+    -- return focus to previous docview
+    core.set_active_view(self.prev_view)
+    self.prev_view = nil
   end
 end
 
