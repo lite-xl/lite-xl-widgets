@@ -34,7 +34,6 @@ button.on_click = on_button_click
 local button2 = Button(widget, "Button2")
 button2:set_position(10, button:get_bottom() + 10)
 button2:set_tooltip("Description 2")
-button2.on_click = on_button_click
 
 ---@type widget.button
 local button3 = Button(widget, "Button2")

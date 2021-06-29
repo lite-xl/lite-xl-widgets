@@ -28,6 +28,12 @@ local WidgetBorder = {}
 ---@field public dy number Dragging initial y position
 local WidgetPosition = {}
 
+---
+---@alias widtget.button
+---|>'"left"'
+---| '"right"'
+
+---
 ---A base widget
 ---@class widget @global
 ---@field public super widget
@@ -56,6 +62,10 @@ local WidgetPosition = {}
 ---@field private mouse_is_hovering boolean
 local Widget = View:extend()
 
+---
+---When no parent is given to the widget constructor it will automatically
+---overwrite RootView methods to intercept system events.
+---@param parent widget
 function Widget:new(parent)
   Widget.super.new(self)
 
@@ -151,7 +161,8 @@ function Widget:new(parent)
   end
 end
 
----Add a child widget.
+---Add a child widget, automatically assign a zindex if non set and sorts
+---them in reverse order for better events matching.
 ---@param child widget
 function Widget:add_child(child)
   if not child.zindex then
@@ -159,15 +170,25 @@ function Widget:add_child(child)
   end
 
   table.insert(self.childs, child)
-  table.sort(self.childs, function(t1, t2) return t1.zindex < t2.zindex end)
+  table.sort(self.childs, function(t1, t2) return t1.zindex > t2.zindex end)
 
   self.next_zindex = self.next_zindex + 1
 end
 
+---Show the widget.
 function Widget:show() self.visible = true end
 
+---Hide the widget.
 function Widget:hide() self.visible = false end
 
+---Toggle visibility of widget.
+function Widget:toggle_visible() self.visible = not self.visible end
+
+---Draw the widget configured border or custom one.
+---@param x? number
+---@param y? number
+---@param w? number
+---@param h? number
 function Widget:draw_border(x, y, w, h)
   if self.border.width <= 0 then return end
 
@@ -187,11 +208,23 @@ function Widget:draw_border(x, y, w, h)
   )
 end
 
+---Called by lite node system to properly resize the widget.
+---@param axis string | "'x'" | "'y'"
+---@param value number
 function Widget:set_target_size(axis, value)
   self.size[axis] = value
   return true
 end
 
+---@param width integer
+---@param height integer
+function Widget:set_size(width, height)
+  self.size.x = width
+  self.size.y = height
+end
+
+---@param x integer
+---@param y integer
 function Widget:set_position(x, y)
   self.position.x = x + self.border.width
   self.position.y = y + self.border.width
@@ -225,22 +258,34 @@ function Widget:get_position()
   return position
 end
 
+---Get width including borders.
+---@return number
 function Widget:get_width()
   return self.size.x + (self.border.width * 2)
 end
 
+---Get height including borders.
+---@return number
 function Widget:get_height()
   return self.size.y + (self.border.width * 2)
 end
 
+---Get the right x coordinate relative to parent
+---@return number
 function Widget:get_right()
   return self:get_position().x + self:get_width()
 end
 
+---Get the bottom y coordinate relative to parent
+---@return number
 function Widget:get_bottom()
   return self:get_position().y + self:get_height()
 end
 
+---Check if the given mouse coordinate is hovering the widget
+---@param x number
+---@param y number
+---@return boolean
 function Widget:mouse_on_top(x, y)
   return
     x - self.border.width >= self.position.x
@@ -252,22 +297,35 @@ function Widget:mouse_on_top(x, y)
     y - self.border.width <= self.position.y + self:get_height()
 end
 
+---Mark a widget as having focus.
+---TODO: Implement set focus system by pressing a key like tab?
 function Widget:set_focus(has_focus)
   self.set_focus = has_focus
 end
 
+---Text displayed when the widget is hovered.
+---@param tooltip string
 function Widget:set_tooltip(tooltip)
   self.tooltip = tooltip
 end
 
+---A text label for the widget, not all widgets support this.
+---@param text string
 function Widget:set_label(text)
   self.label = text
 end
 
+---Used internally when dragging is activated.
+---@param x number
+---@param y number
 function Widget:drag(x, y)
   self:set_position(x - self.position.dx, y - self.position.dy)
 end
 
+---Replaces current active child with a new one and calls the
+---activate/deactivate events of the child. This is especially
+---used to send text input events to widgets with input_text support.
+---@param child? widget If nil deactivates current child
 function Widget:swap_active_child(child)
   if self.child_active then
     self.child_active:deactivate()
@@ -281,6 +339,8 @@ function Widget:swap_active_child(child)
   end
 end
 
+---Calculates the scrollable size based on the bottom most widget.
+---@return number
 function Widget:get_scrollable_size()
   local bottom_position = self.size.y
   for _, child in pairs(self.childs) do
@@ -293,6 +353,9 @@ end
 -- Events
 --
 
+---Redirects any text input to active child with the input_text flag.
+---@param text string
+---@return boolean processed
 function Widget:on_text_input(text)
   if not self.visible then return end
 
@@ -303,18 +366,35 @@ function Widget:on_text_input(text)
     return true
   end
 
+  for _, child in pairs(self.childs) do
+    if child:on_text_input(text) then
+      return true
+    end
+  end
+
   return false
 end
 
+---Send mouse pressed events to hovered child or starts dragging if enabled.
+---@param button widget.button
+---@param x number
+---@param y number
+---@param clicks integer
+---@return boolean processed
 function Widget:on_mouse_pressed(button, x, y, clicks)
   if not self.visible then return end
 
-  if self:mouse_on_top(x, y) then
-    if Widget.super.on_mouse_pressed(self, button, x, y, clicks) then
+  for _, child in pairs(self.childs) do
+    if child:mouse_on_top(x, y) then
+      child:on_mouse_pressed(button, x, y, clicks)
       return true
     end
+  end
+
+  if self:mouse_on_top(x, y) then
+    Widget.super.on_mouse_pressed(self, button, x, y, clicks)
     self.mouse_is_pressed = true
-    if self.draggable then
+    if self.draggable and not self.child_active then
       self.position.dx = x - self.position.x
       self.position.dy = y - self.position.y
       system.set_cursor("hand")
@@ -324,18 +404,41 @@ function Widget:on_mouse_pressed(button, x, y, clicks)
     return false
   end
 
-  for _, child in pairs(self.childs) do
-    if child:mouse_on_top(x, y) then
-      child:on_mouse_pressed(button, x, y, clicks)
-      return true
-    end
-  end
-
   return true
 end
 
+---Send mouse released events to hovered child, ends dragging if enabled and
+---emits on click events if applicable.
+---@param button widget.button
+---@param x number
+---@param y number
+---@return boolean processed
 function Widget:on_mouse_released(button, x, y)
   if not self.visible then return end
+
+  self:swap_active_child()
+
+  if not self.dragged then
+    for _, child in pairs(self.childs) do
+      local mouse_on_top = child:mouse_on_top(x, y)
+      if mouse_on_top or child.mouse_is_pressed then
+        child:on_mouse_released(button, x, y)
+        if child.input_text then
+          self:swap_active_child(child)
+        end
+        if mouse_on_top then
+          child:on_click(button, x, y)
+        end
+        return true
+      end
+    end
+  end
+
+  if not self:mouse_on_top(x, y) and not self.mouse_is_pressed then
+    return false
+  end
+
+  Widget.super.on_mouse_released(self, button, x, y)
 
   if self.mouse_is_pressed then
     self.mouse_is_pressed = false
@@ -344,45 +447,67 @@ function Widget:on_mouse_released(button, x, y)
     end
   end
 
-  if not self:mouse_on_top(x, y) then
-    return false
-  end
-
-  Widget.super.on_mouse_released(self, button, x, y)
-
-  self:swap_active_child()
-
-  if not self.dragged then
-    for _, child in pairs(self.childs) do
-      if child:mouse_on_top(x, y) or child.mouse_is_pressed then
-        child:on_mouse_released(button, x, y)
-        if child.input_text then
-          self:swap_active_child(child)
-        end
-        child:on_click(button, x, y)
-        return true
-      end
-    end
-  end
-
   self.dragged = false
 
   return true
 end
 
+---Click event emitted on a succesful on_mouse_pressed
+---and on_mouse_released events combo.
+---@param button widget.button
+---@param x number
+---@param y number
 function Widget:on_click(button, x, y) end
 
+---Emitted to input_text widgets when clicked.
 function Widget:activate() end
 
+---Emitted to input_text widgets on lost focus.
 function Widget:deactivate() end
 
+---Besides the on_mouse_moved this event emits on_mouse_enter
+---and on_mouse_leave for easy hover effects. Also, if the
+---widget is scrollable and pressed this will drag it unless
+---there is an active input_text child active.
+---@param x number
+---@param y number
+---@param dx number
+---@param dy number
 function Widget:on_mouse_moved(x, y, dx, dy)
+  if not self.visible then return end
+
+  -- store latest mouse coordinates for usage on the on_mouse_wheel event.
   self.mouse.x = x
   self.mouse.y = y
 
-  if self.visible then
+  if not self.dragged then
+    local hovered = nil
+    for _, child in pairs(self.childs) do
+      if
+        not hovered
+        and
+        (child:mouse_on_top(x, y) or child.mouse_is_pressed)
+      then
+        hovered = child
+      elseif child.mouse_is_hovering then
+        child.mouse_is_hovering = false
+        if #child.tooltip > 0 then
+          core.status_view:remove_tooltip()
+        end
+        child:on_mouse_leave(x, y, dx, dy)
+      end
+    end
+
+    if hovered then
+      hovered:on_mouse_moved(x, y, dx, dy)
+      return true;
+    end
+  end
+
+  if self:mouse_on_top(x, y) or self.mouse_is_pressed then
     Widget.super.on_mouse_moved(self, x, y, dx, dy)
     if self.dragging_scrollbar then
+      self.dragged = true
       return true
     end
   else
@@ -400,47 +525,35 @@ function Widget:on_mouse_moved(x, y, dx, dy)
       end
       self:on_mouse_enter(x, y, dx, dy)
     end
-  elseif not self.mouse_is_pressed or not self.draggable then
-    if self.mouse_is_hovering then
-      self.mouse_is_hovering = false
-      if #self.tooltip > 0 then
-        core.status_view:remove_tooltip()
-      end
-      self:on_mouse_leave(x, y, dx, dy)
-    end
+  elseif not self.mouse_is_pressed then
     is_over = false
   end
 
-  if self.mouse_is_pressed and self.draggable then
+  if not self.child_active and self.mouse_is_pressed and self.draggable then
     self:drag(x, y)
     self.dragged = true
     return true
   end
 
-  for _, child in pairs(self.childs) do
-    if child:mouse_on_top(x, y) or child.mouse_is_hovering then
-      child:on_mouse_moved(x, y, dx, dy)
-      break
-    end
-  end
-
   return is_over
 end
 
+---Emitted once when the mouse hovers the widget.
 function Widget:on_mouse_enter(x, y, dx, dy)
   for _, child in pairs(self.childs) do
     if child:mouse_on_top(x, y) then
       child:on_mouse_enter(x, y, dx, dy)
-      return
+      break
     end
   end
 end
 
+---Emitted once when the mouse leaves the widget.
 function Widget:on_mouse_leave(x, y, dx, dy)
   for _, child in pairs(self.childs) do
     if child:mouse_on_top(x, y) then
       child:on_mouse_leave(x, y, dx, dy)
-      return
+      break
     end
   end
 end
@@ -518,8 +631,8 @@ function Widget:draw()
     )
   end
 
-  for _, child in pairs(self.childs) do
-    child:draw()
+  for i=#self.childs, 1, -1 do
+    self.childs[i]:draw()
   end
 
   if #self.childs > 0 then
