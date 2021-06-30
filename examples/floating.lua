@@ -1,7 +1,5 @@
 --
--- Testing and example script.
--- @copyright Jefferson Gonzalez
--- @license MIT
+-- Basic floating example.
 --
 
 local core = require "core"
@@ -102,10 +100,3 @@ widget.update = function(self)
 end
 
 widget:show()
-
--- You can also add the widget as a lite node
--- widget.border.width = 0
--- widget.draggable = false
--- widget.target_size = 250
--- local node = core.root_view:get_active_node()
--- node:split("right", widget, {x=true}, true)

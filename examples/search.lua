@@ -1,7 +1,5 @@
 --
--- Testing and example script.
--- @copyright Jefferson Gonzalez
--- @license MIT
+-- A basic search layout example.
 --
 
 local core = require "core"
@@ -98,7 +96,7 @@ end
 
 widget:show()
 
--- You can also add the widget as a lite node
+-- You can add the widget as a lite node
 widget.border.width = 0
 widget.draggable = false
 widget.target_size = 250
