@@ -332,6 +332,8 @@ end
 ---@return boolean
 function Widget:mouse_on_top(x, y)
   return
+    self.visible
+    and
     x - self.border.width >= self.position.x
     and
     x - self.border.width <= self.position.x + self:get_width()
@@ -371,6 +373,10 @@ end
 ---used to send text input events to widgets with input_text support.
 ---@param child? widget If nil deactivates current child
 function Widget:swap_active_child(child)
+  if self.parent then
+    self.parent:swap_active_child(child)
+  end
+
   if self.child_active then
     self.child_active:deactivate()
   end
