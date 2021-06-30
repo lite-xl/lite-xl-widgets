@@ -126,7 +126,7 @@ end
 ---Recalculate the position of the elements on resizing or position
 ---changes and also make changes to properly render active pane.
 function NoteBook:update()
-  NoteBook.super.update(self)
+  if not NoteBook.super.update(self) then return end
 
   for pos, pane in pairs(self.panes) do
     if pos ~= 1 then
@@ -164,7 +164,7 @@ end
 
 ---Here we draw the bottom line on the tab of active pane.
 function NoteBook:draw()
-  NoteBook.super.draw(self)
+  if not NoteBook.super.draw(self) then return end
 
   if self.active_pane then
     local x = self.active_pane.tab.position.x
