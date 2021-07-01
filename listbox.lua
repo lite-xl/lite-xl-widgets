@@ -117,12 +117,15 @@ end
 ---Remove a given row index from the list.
 ---@param ridx integer
 function ListBox:remove_row(ridx)
-  array_remove(self.rows, function(_, i, _)
-    if i == ridx then
-      return false
-    end
-    return true
-  end)
+  local fields = { "rows", "positions", "row_data" }
+  for _, field in ipairs(fields) do
+    array_remove(self[field], function(_, i, _)
+      if i == ridx then
+        return false
+      end
+      return true
+    end)
+  end
 end
 
 ---Get the starting and ending position of columns in a row table.

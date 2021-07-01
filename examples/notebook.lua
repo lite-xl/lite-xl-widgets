@@ -14,7 +14,7 @@ local ListBox = require "widget.listbox"
 ---@type widget.notebook
 local notebook = NoteBook()
 notebook.size.x = 250
-notebook.size.y = 150
+notebook.size.y = 300
 notebook.border.width = 0
 
 local log = notebook:add_pane("log", "Messages")
@@ -49,8 +49,10 @@ checkbox2:set_position(10, button:get_bottom() + 30)
 local listbox = ListBox(diagnostics)
 listbox.border.width = 0
 listbox:enable_expand(true)
+
 listbox:add_column("Severity")
 listbox:add_column("Message")
+
 listbox:add_row({
   style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
   ListBox.COLEND,
@@ -61,6 +63,14 @@ listbox:add_row({
   ListBox.COLEND,
   "Another message to display to the user\nwith new line characters\nfor the win."
 })
+for num=1, 50 do
+  listbox:add_row({
+    style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
+    ListBox.COLEND,
+    tostring(num),
+    " Another message to display to the user\nwith new line characters\nfor the win."
+  })
+end
 listbox:add_row({
   style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
   ListBox.COLEND,
@@ -68,7 +78,7 @@ listbox:add_row({
 })
 
 listbox.on_row_click = function(self, idx, data)
-  system.show_fatal_error("Clicked a row", idx)
+  self:remove_row(idx)
 end
 
 notebook:show()
