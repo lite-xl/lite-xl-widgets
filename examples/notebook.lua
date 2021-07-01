@@ -69,7 +69,7 @@ for num=1, 50 do
     ListBox.COLEND,
     tostring(num),
     " Another message to display to the user\nwith new line characters\nfor the win."
-  })
+  }, num)
 end
 listbox:add_row({
   style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
@@ -78,6 +78,9 @@ listbox:add_row({
 })
 
 listbox.on_row_click = function(self, idx, data)
+  if data then
+    system.show_fatal_error("Row Data", data)
+  end
   self:remove_row(idx)
 end
 
