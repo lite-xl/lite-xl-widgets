@@ -158,6 +158,7 @@ end
 ---Remove all the rows from the listbox.
 function ListBox:clear()
   self.rows = {}
+  self.row_data = {}
   self.positions = {}
   self.selected_row = 0
 
