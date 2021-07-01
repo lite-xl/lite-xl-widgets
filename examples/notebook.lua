@@ -4,21 +4,23 @@
 
 local core = require "core"
 local command = require "core.command"
+local style = require "core.style"
 local NoteBook = require "widget.notebook"
 local Button = require "widget.button"
 local TextBox = require "widget.textbox"
 local CheckBox = require "widget.checkbox"
+local ListBox = require "widget.listbox"
 
 ---@type widget.notebook
 local notebook = NoteBook()
 notebook.size.x = 250
-notebook.size.y = 300
+notebook.size.y = 150
 notebook.border.width = 0
 
 local log = notebook:add_pane("log", "Messages")
 local build = notebook:add_pane("build", "Build")
 local errors = notebook:add_pane("errors", "Errors")
-local other = notebook:add_pane("other", "other")
+local diagnostics = notebook:add_pane("diagnostics", "Diagnostics")
 
 notebook:set_pane_icon("log", "i")
 notebook:set_pane_icon("build", "P")
@@ -42,6 +44,32 @@ end
 ---@type widget.checkbox
 local checkbox2 = CheckBox(errors, "Child checkbox2")
 checkbox2:set_position(10, button:get_bottom() + 30)
+
+---@type widget.listbox
+local listbox = ListBox(diagnostics)
+listbox.border.width = 0
+listbox:enable_expand(true)
+listbox:add_column("Severity")
+listbox:add_column("Message")
+listbox:add_row({
+  style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
+  ListBox.COLEND,
+  "A message to display to the user."
+})
+listbox:add_row({
+  style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
+  ListBox.COLEND,
+  "Another message to display to the user\nwith new line characters\nfor the win."
+})
+listbox:add_row({
+  style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
+  ListBox.COLEND,
+  "Final message to display."
+})
+
+listbox.on_row_click = function(self, idx, data)
+  system.show_fatal_error("Clicked a row", idx)
+end
 
 notebook:show()
 
