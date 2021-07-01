@@ -266,6 +266,23 @@ function Widget:set_size(width, height)
   end
 end
 
+---Called on the update function to be able to scroll the child widgets.
+function Widget:update_position()
+  if self.parent then
+    self.position.x = self.position.rx + self.border.width
+    self.position.y = self.position.ry + self.border.width
+
+    -- add offset to properly scroll
+    local ox, oy = self.parent:get_content_offset()
+    self.position.x = ox + self.position.x
+    self.position.y = oy + self.position.y
+  end
+
+  for _, child in pairs(self.childs) do
+    child:update_position()
+  end
+end
+
 ---Set the position of the widget and updates the child absolute coordinates
 ---@param x integer
 ---@param y integer
@@ -366,6 +383,19 @@ end
 ---@param y number
 function Widget:drag(x, y)
   self:set_position(x - self.position.dx, y - self.position.dy)
+end
+
+---Center the widget horizontally and vertically to the screen or parent widget.
+function Widget:centered()
+  local w, h = system.get_window_size();
+  if self.parent then
+    w = self.parent.size.x
+    h = self.parent.size.y
+  end
+  self:set_position(
+    (w / 2) - (self.size.x / 2),
+    (h / 2) - (self.size.y / 2)
+  )
 end
 
 ---Replaces current active child with a new one and calls the
@@ -644,6 +674,9 @@ function Widget:update()
   if not self.visible then return end
 
   Widget.super.update(self)
+
+  -- call this to be able to properly scroll
+  self:update_position()
 
   if
     #self.childs > 0
