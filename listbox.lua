@@ -547,8 +547,6 @@ function ListBox:draw()
 
     self.largest_row = self.size.x
       - (self.parent.border.width * 2)
-
-    self.size.x = self.size.x - style.scrollbar_size
   else
     self.largest_row = new_width
   end
