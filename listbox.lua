@@ -12,6 +12,7 @@ local Widget = require "widget"
 ---@field public name string
 ---@field public width string
 ---@field public expand boolean
+---@field public longest integer
 local ListBoxColumn = {}
 
 ---@alias widget.listbox.row table<integer, renderer.font|renderer.color|integer|string>
@@ -49,7 +50,6 @@ function ListBox:new(parent)
   self.row_data = {}
   self.columns = {}
   self.positions = {}
-  self.mouse = {x = 0, y = 0}
   self.selected_row = 0
   self.largest_row = 0
   self.expand = false
@@ -91,7 +91,12 @@ function ListBox:add_row(row, data)
     for col, pos in ipairs(self.positions[ridx]) do
       if self.columns[col].expand then
         local w = self:draw_row_range(row, pos[1], pos[2], 1, 1, true)
+
+        -- store the row with longest column for cheaper calculation
         self.columns[col].width = math.max(self.columns[col].width, w)
+        if self.columns[col].width < w then
+          self.columns[col].longest = ridx
+        end
       end
     end
   end
@@ -159,14 +164,34 @@ function ListBox:set_visible_rows()
   for i=1, #self.rows, 1 do
     local row = self.rows[i]
     local top = row.y - colh + row.h + oy
-    if top >= 0 and height < h then
+    local visible = false
+    if top < 0 and (top + row.h) > 0 then
+      visible = true
+    end
+    if (top >= 0 or visible) and height < h then
       table.insert(self.visible_rows, i)
       first_visible = true
-      --TODO: Calculate the visible height of the row
-      --instead of using the whole height
-      height = height + row.h
+      -- store only the visible height
+      if top < 0 then
+        height = height + (top + row.h)
+      else
+        --TODO: handle elements which full bottom isn't visible,
+        --for now we just append at least 2 more rows if possible
+        height = height + row.h
+      end
     elseif first_visible then
+      table.insert(self.visible_rows, i)
       break
+    end
+  end
+
+  -- append one more row if possible to fill possible empty spaces of
+  -- incomplete row height calculation above
+  if #self.visible_rows > 0 then
+    local last_visible = self.visible_rows[#self.visible_rows]
+
+    if self.rows[last_visible+1] then
+      table.insert(self.visible_rows, last_visible+1)
     end
   end
 end
@@ -202,6 +227,11 @@ function ListBox:remove_row(ridx)
       end
       return true
     end)
+  end
+  for _, col in ipairs(self.columns) do
+    if col.longest == ridx then
+      col.longest = nil
+    end
   end
   self:recalc_all_rows()
 end
@@ -242,6 +272,7 @@ function ListBox:clear()
 
   for cidx, col in ipairs(self.columns) do
     col.width = self:get_col_width(cidx)
+    col.longest = nil
   end
 end
 
@@ -334,6 +365,20 @@ function ListBox:get_col_width(col)
     if not self.columns[col].expand then
       return self.columns[col].width
     else
+      -- if longest is available don't iterate the entire row list
+      if self.columns[col].longest then
+        local id = self.columns[col].longest
+        local width = self:draw_row_range(
+          self.rows[id],
+          self.positions[id][col][1],
+          self.positions[id][col][2],
+          1,
+          1,
+          true
+        )
+        return width
+      end
+
       local width = style.font:get_width(self.columns[col].name)
       for id, row in ipairs(self.rows) do
         local w, h = self:draw_row_range(
@@ -457,20 +502,16 @@ end
 
 function ListBox:on_mouse_leave(x, y, dx, dy)
   ListBox.super.on_mouse_leave(self, x, y, dx, dy)
-  self.mouse.x = 0
-  self.mouse.y = 0
   self.selected_row = 0
 end
 
 function ListBox:on_mouse_moved(x, y, dx, dy)
   ListBox.super.on_mouse_moved(self, x, y, dx, dy)
-  self.mouse.x = x
-  self.mouse.y = y
   self.selected_row = 0
 end
 
 function ListBox:on_click(button, x, y)
-  if self.selected_row > 0 then
+  if button == "left" and self.selected_row > 0 then
     self:on_row_click(self.selected_row, self.row_data[self.selected_row])
   end
 end
@@ -520,14 +561,16 @@ function ListBox:draw()
     end
   end
 
-  -- TODO properly normalize the offset position for more natural scrolling.
-  -- local _, opy = self.parent:get_content_offset()
-  -- local _, oy = self:get_content_offset()
-  -- oy = oy - opy
+  -- Normalize the offset position
+  local _, opy = self.parent:get_content_offset()
+  local _, oy = self:get_content_offset()
+  oy = oy - opy
+  if #self.visible_rows > 0 then
+    oy = oy + (self.rows[self.visible_rows[1]].y - new_height)
+  end
 
   local x = self.position.x + self.border.width
-  local y = self.position.y + self.border.width + new_height
-  --local y = oy + self.position.y + self.border.width + new_height
+  local y = oy + self.position.y + self.border.width + new_height
 
   for _, ridx in ipairs(self.visible_rows) do
     if self.rows[ridx] then

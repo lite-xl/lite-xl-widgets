@@ -14,7 +14,7 @@ widget.size.x = 400
 widget.size.y = 150
 widget.position.x = 100
 widget.draggable = true
-widget.scrollable = true
+widget.scrollable = false
 
 widget:centered()
 
