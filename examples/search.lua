@@ -45,16 +45,19 @@ replacetext:set_tooltip("Text to replace")
 local findprev = Button(widget, "Find Prev")
 findprev:set_position(10, replacetext:get_bottom() + 10)
 findprev:set_tooltip("Find backwards")
+findprev.on_click = on_button_click
 
 ---@type widget.button
 local findnext = Button(widget, "Find Next")
 findnext:set_position(findprev:get_right() + 5, replacetext:get_bottom() + 10)
 findnext:set_tooltip("Find forward")
+findnext.on_click = on_button_click
 
 ---@type widget.button
 local replace = Button(widget, "Replace All")
 replace:set_position(10, findnext:get_bottom() + 10)
 replace:set_tooltip("Replace all matching results")
+replace.on_click = on_button_click
 
 ---@type widget.line
 local line_options = Line(widget)
