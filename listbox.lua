@@ -29,6 +29,8 @@ local ListBoxColumn = {}
 ---@field private largest_row integer
 ---@field private expand boolean
 ---@field private visible_rows table<integer, integer>
+---@field private last_scale integer
+---@field private last_offset integer
 local ListBox = Widget:extend()
 
 ---Indicates on a widget.listbox.row that the end
@@ -54,8 +56,10 @@ function ListBox:new(parent)
   self.largest_row = 0
   self.expand = false
   self.visible_rows = {}
+  self.last_scale = 0
+  self.last_offset = 0
 
-  self:set_size(200, style.font:get_height() + style.padding.y)
+  self:set_size(200, (style.font:get_height() + (style.padding.y*2)) * 3)
 end
 
 ---If no width is given column will be set to automatically
@@ -258,9 +262,21 @@ function ListBox:get_col_positions(row)
   return positions
 end
 
----Enables expanding the element to total size of parent.
+---Enables expanding the element to total size of parent on content updates.
 function ListBox:enable_expand(expand)
   self.expand = expand
+  if expand then
+    self:resize_to_parent()
+  end
+end
+
+---Resizes the listbox to match the parent size
+function ListBox:resize_to_parent()
+  self.size.x = self.parent.size.x
+    - (self.border.width * 2)
+
+  self.size.y = self.parent.size.y
+    - (self.border.width * 2)
 end
 
 ---Remove all the rows from the listbox.
@@ -521,35 +537,29 @@ end
 ---@param data any Data associated with the row
 function ListBox:on_row_click(idx, data) end
 
-local last_scale_update = 0
-local last_offset = 0
 function ListBox:update()
   if not ListBox.super.update(self) then return end
 
   -- only calculate columns width on scale change since this can be expensive
-  if last_scale_update ~= SCALE then
+  if self.last_scale ~= SCALE then
     if #self.columns > 0 then
       for col, column in ipairs(self.columns) do
         column.width = self:get_col_width(col)
       end
     end
     self:recalc_all_rows()
-    last_scale_update = SCALE
+    self.last_scale = SCALE
   end
 
   local _, oy = self:get_content_offset()
-  if last_offset ~= oy then
+  if self.last_offset ~= oy then
     self:set_visible_rows()
-    last_offset = oy
+    self.last_offset = oy
   end
 end
 
 function ListBox:draw()
   if not ListBox.super.draw(self) then return end
-
-  if #self.rows > 0 and #self.visible_rows == 0 then
-    self:set_visible_rows()
-  end
 
   local new_width = 0
   local new_height = 0
@@ -568,10 +578,14 @@ function ListBox:draw()
   if #self.visible_rows > 0 then
     oy = oy + (self.rows[self.visible_rows[1]].y - new_height)
   end
+  oy = oy - (self.position.y - self.parent.position.y)
 
   local x = self.position.x + self.border.width
   local y = oy + self.position.y + self.border.width + new_height
 
+  core.push_clip_rect(
+    self.position.x, self.position.y, self:get_width(), self:get_height()
+  )
   for _, ridx in ipairs(self.visible_rows) do
     if self.rows[ridx] then
       local w, h = self:draw_row(ridx, x, y)
@@ -580,25 +594,25 @@ function ListBox:draw()
       y = y + h
     end
   end
+  core.pop_clip_rect()
 
   if self.expand then
-    self.size.x = self.parent.size.x
-      - (self.border.width * 2)
-
-    self.size.y = self.parent.size.y
-      - (self.border.width * 2)
+    self:resize_to_parent()
 
     self.largest_row = self.size.x
       - (self.parent.border.width * 2)
   else
-    self.largest_row = new_width
+    self.largest_row = math.max(new_width, self:get_width() - (self.border.width*2))
   end
 
   if #self.columns > 0 then
     self:draw_header(
       self.largest_row,
-      style.font:get_height() + style.padding.y)
+      style.font:get_height() + style.padding.y
+    )
   end
+
+  self:draw_border()
 
   if self.scrollable then
     self:draw_scrollbar()
