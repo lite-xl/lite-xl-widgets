@@ -239,8 +239,31 @@ function Widget:draw_border(x, y, w, h)
   w = w + (self.border.width * 2)
   h = h + (self.border.width * 2)
 
+  -- renderer.draw_rect(
+  --   x, y, w + x % 1, h + y % 1,
+  --   self.border.color or style.text
+  -- )
+
+  -- Draw lines instead of full rectangle to be able to draw on top
+
+  --top
   renderer.draw_rect(
-    x, y, w + x % 1, h + y % 1,
+    x, y, w + x % 1, self.border.width,
+    self.border.color or style.text
+  )
+  --bottom
+  renderer.draw_rect(
+    x, y+h, w + x % 1, self.border.width,
+    self.border.color or style.text
+  )
+  --right
+  renderer.draw_rect(
+    x+w, y, self.border.width, h,
+    self.border.color or style.text
+  )
+  --left
+  renderer.draw_rect(
+    x, y, self.border.width, h,
     self.border.color or style.text
   )
 end
@@ -391,8 +414,8 @@ end
 function Widget:centered()
   local w, h = system.get_window_size();
   if self.parent then
-    w = self.parent.size.x
-    h = self.parent.size.y
+    w = self.parent.size.x - (self.parent.border.width*2)
+    h = self.parent.size.y - (self.parent.border.width*2)
   end
   self:set_position(
     (w / 2) - (self.size.x / 2),
