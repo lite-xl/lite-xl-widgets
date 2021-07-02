@@ -46,6 +46,8 @@ local checkbox2 = CheckBox(errors, "Child checkbox2")
 checkbox2:set_position(10, button:get_bottom() + 30)
 
 ---@type widget.listbox
+diagnostics.scrollable = false
+
 local listbox = ListBox(diagnostics)
 listbox.border.width = 0
 listbox:enable_expand(true)
@@ -63,7 +65,7 @@ listbox:add_row({
   ListBox.COLEND,
   "Another message to display to the user\nwith new line characters\nfor the win."
 })
-for num=1, 50 do
+for num=1, 1000 do
   listbox:add_row({
     style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
     ListBox.COLEND,
