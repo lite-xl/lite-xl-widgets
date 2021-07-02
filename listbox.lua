@@ -27,6 +27,7 @@ local ListBoxColumn = {}
 ---@field private selected_row integer
 ---@field private largest_row integer
 ---@field private expand boolean
+---@field private visible_rows table<integer, integer>
 local ListBox = Widget:extend()
 
 ---Indicates on a widget.listbox.row that the end
@@ -43,6 +44,7 @@ ListBox.NEWLINE = 2
 ---@param parent widget
 function ListBox:new(parent)
   ListBox.super.new(self, parent)
+  self.scrollable = true
   self.rows = {}
   self.row_data = {}
   self.columns = {}
@@ -51,8 +53,9 @@ function ListBox:new(parent)
   self.selected_row = 0
   self.largest_row = 0
   self.expand = false
+  self.visible_rows = {}
 
-  self:set_size(200, style.font:get_height() + (style.padding.y / 2))
+  self:set_size(200, style.font:get_height() + style.padding.y)
 end
 
 ---If no width is given column will be set to automatically
@@ -92,6 +95,80 @@ function ListBox:add_row(row, data)
       end
     end
   end
+
+  -- precalculate the row size and position
+  self:calc_row_size_pos(#self.rows)
+end
+
+---Calculate a row position and size and store it on the row it
+---self on the fields x, y, w, h
+---@param ridx integer
+function ListBox:calc_row_size_pos(ridx)
+  local x = self.border.width
+  local y = self.border.width
+
+  if ridx == 1 then
+    -- if columns are enabled leave some space to render them
+    if #self.columns > 0 then
+      y = y + style.font:get_height() + style.padding.y
+    end
+  else
+    y = y + self.rows[ridx-1].y + self.rows[ridx-1].h
+  end
+
+  self:draw_row(ridx, x, y, true)
+end
+
+---Recalculate all row sizes and positions which should be only required
+---when lite-xl ui scale changes or a row is removed from the list
+function ListBox:recalc_all_rows()
+  for ridx, _ in ipairs(self.rows) do
+    self:calc_row_size_pos(ridx)
+  end
+end
+
+---Calculates the scrollable size based on the last row of the list.
+---@return number
+function ListBox:get_scrollable_size()
+  local size = self.size.y
+  local rows = #self.rows
+  if rows > 0 then
+    size = math.max(size, self.rows[rows].y + self.rows[rows].h)
+  end
+  return size
+end
+
+---Detects the rows that are visible each time the content is scrolled,
+---this way the draw function will only process the visible rows.
+function ListBox:set_visible_rows()
+  local _, oy = self:get_content_offset()
+  local h = self.size.y
+
+  -- substract column heading from list height
+  local colh = 0
+  if #self.columns > 0 then
+    colh = style.font:get_height() + style.padding.y
+    h = h - colh
+  end
+
+  oy = oy - self.position.y
+
+  self.visible_rows = {}
+  local first_visible = false
+  local height = 0
+  for i=1, #self.rows, 1 do
+    local row = self.rows[i]
+    local top = row.y - colh + row.h + oy
+    if top >= 0 and height < h then
+      table.insert(self.visible_rows, i)
+      first_visible = true
+      --TODO: Calculate the visible height of the row
+      --instead of using the whole height
+      height = height + row.h
+    elseif first_visible then
+      break
+    end
+  end
 end
 
 -- Solution to safely remove elements from array table:
@@ -126,6 +203,7 @@ function ListBox:remove_row(ridx)
       return true
     end)
   end
+  self:recalc_all_rows()
 end
 
 ---Get the starting and ending position of columns in a row table.
@@ -293,7 +371,8 @@ function ListBox:draw_header(w, h)
   end
 end
 
----Draw or calculate the size of the given row position.
+---Draw or calculate the dimensions of the given row position and stores
+---the size and position on the row it self.
 ---@param row integer
 ---@param x integer
 ---@param y integer
@@ -358,13 +437,15 @@ function ListBox:draw_row(row, x, y, only_calc)
   -- Add padding on top and bottom
   h = h + style.padding.y
 
-  -- store the dimensions for inexpensive subsequent hover calculation
-  self.rows[row].w = w
-  self.rows[row].h = h
+  if only_calc or not self.rows[row].w then
+    -- store the dimensions for inexpensive subsequent hover calculation
+    self.rows[row].w = w
+    self.rows[row].h = h
 
-  -- TODO: performance improvement, render only the visible rows on the view?
-  self.rows[row].x = x
-  self.rows[row].y = y - (style.padding.y / 2)
+    -- TODO: performance improvement, render only the visible rows on the view?
+    self.rows[row].x = x
+    self.rows[row].y = y - (style.padding.y / 2)
+  end
 
   -- return height with padding on top and bottom
   return w, h
@@ -400,6 +481,7 @@ end
 function ListBox:on_row_click(idx, data) end
 
 local last_scale_update = 0
+local last_offset = 0
 function ListBox:update()
   if not ListBox.super.update(self) then return end
 
@@ -410,12 +492,23 @@ function ListBox:update()
         column.width = self:get_col_width(col)
       end
     end
+    self:recalc_all_rows()
     last_scale_update = SCALE
+  end
+
+  local _, oy = self:get_content_offset()
+  if last_offset ~= oy then
+    self:set_visible_rows()
+    last_offset = oy
   end
 end
 
 function ListBox:draw()
   if not ListBox.super.draw(self) then return end
+
+  if #self.rows > 0 and #self.visible_rows == 0 then
+    self:set_visible_rows()
+  end
 
   local new_width = 0
   local new_height = 0
@@ -427,34 +520,36 @@ function ListBox:draw()
     end
   end
 
+  -- TODO properly normalize the offset position for more natural scrolling.
+  -- local _, opy = self.parent:get_content_offset()
+  -- local _, oy = self:get_content_offset()
+  -- oy = oy - opy
+
   local x = self.position.x + self.border.width
   local y = self.position.y + self.border.width + new_height
+  --local y = oy + self.position.y + self.border.width + new_height
 
-  for ridx, row in ipairs(self.rows) do
-    local w, h = self:draw_row(ridx, x, y)
-    new_width = math.max(new_width, w)
-    new_height = new_height + h
-    y = y + h
+  for _, ridx in ipairs(self.visible_rows) do
+    if self.rows[ridx] then
+      local w, h = self:draw_row(ridx, x, y)
+      new_width = math.max(new_width, w)
+      new_height = new_height + h
+      y = y + h
+    end
   end
 
-  self.size.y = new_height + (self.border.width * 2)
-
-  if self.expand and new_width < self.parent.size.x then
+  if self.expand then
     self.size.x = self.parent.size.x
+      - (self.border.width * 2)
+
+    self.size.y = self.parent.size.y
       - (self.border.width * 2)
 
     self.largest_row = self.size.x
       - (self.parent.border.width * 2)
 
-    if self.size.y < self.parent.size.y then
-      self.size.y = self.parent.size.y
-        - (self.border.width * 2)
-    else
-      self.size.x = self.size.x - style.scrollbar_size
-    end
+    self.size.x = self.size.x - style.scrollbar_size
   else
-    -- resize it self to largest row width and amount of rows
-    self.size.x = new_width + (self.border.width * 2)
     self.largest_row = new_width
   end
 
@@ -462,6 +557,10 @@ function ListBox:draw()
     self:draw_header(
       self.largest_row,
       style.font:get_height() + style.padding.y)
+  end
+
+  if self.scrollable then
+    self:draw_scrollbar()
   end
 end
 
