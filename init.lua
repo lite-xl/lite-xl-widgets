@@ -478,7 +478,19 @@ function Widget:on_mouse_pressed(button, x, y, clicks)
 
   if self:mouse_on_top(x, y) then
     Widget.super.on_mouse_pressed(self, button, x, y, clicks)
+
+    if self.hovered_scrollbar then
+      if self.parent then
+        -- propagate to parents so if mouse is not on top still
+        -- reach the childrens when the mouse is released
+        self.parent.was_scrolling = true
+      end
+      self.was_scrolling = true
+      return true
+    end
+
     self.mouse_is_pressed = true
+
     if self.draggable and not self.child_active then
       self.position.dx = x - self.position.x
       self.position.dy = y - self.position.y
@@ -506,12 +518,18 @@ function Widget:on_mouse_released(button, x, y)
   if not self.dragged then
     for _, child in pairs(self.childs) do
       local mouse_on_top = child:mouse_on_top(x, y)
-      if mouse_on_top or child.mouse_is_pressed then
+      if
+        mouse_on_top
+        or
+        child.was_scrolling
+        or
+        child.mouse_is_pressed
+      then
         child:on_mouse_released(button, x, y)
         if child.input_text then
           self:swap_active_child(child)
         end
-        if mouse_on_top then
+        if child.mouse_is_pressed then
           child:on_click(button, x, y)
         end
         return true
@@ -519,13 +537,27 @@ function Widget:on_mouse_released(button, x, y)
     end
   end
 
-  if not self:mouse_on_top(x, y) and not self.mouse_is_pressed then
+  if self.was_scrolling then
+    Widget.super.on_mouse_released(self, button, x, y)
+    self.mouse_is_pressed = false
+    self.was_scrolling = false
+    return
+  end
+
+  if
+    not self:mouse_on_top(x, y)
+    and
+    not self.mouse_is_pressed
+    and
+    not self.was_scrolling
+  then
     return false
   end
 
   Widget.super.on_mouse_released(self, button, x, y)
 
   if self.mouse_is_pressed then
+    self:on_click(button, x, y)
     self.mouse_is_pressed = false
     if self.draggable then
       system.set_cursor("arrow")
