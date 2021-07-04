@@ -56,6 +56,7 @@ function ListBox:new(parent)
   self.largest_row = 0
   self.expand = false
   self.visible_rows = {}
+  self.visible_rendered = false
   self.last_scale = 0
   self.last_offset = 0
 
@@ -160,42 +161,85 @@ function ListBox:set_visible_rows()
     h = h - colh
   end
 
+  -- start from nearest row relative to scroll direction for
+  -- better performance on long lists
+  local idx, total, step = 1, #self.rows, 1
+  if #self.visible_rows > 0 then
+    if oy < self.last_offset or not self.visible_rendered then
+      idx = self.visible_rows[1]
+      self.visible_rendered = true
+    else
+      idx = self.visible_rows[#self.visible_rows]
+      total = 1
+      step = -1
+    end
+  end
+
   oy = oy - self.position.y
 
   self.visible_rows = {}
   local first_visible = false
   local height = 0
-  for i=1, #self.rows, 1 do
+  for i=idx, total, step do
     local row = self.rows[i]
-    local top = row.y - colh + row.h + oy
-    local visible = false
-    if top < 0 and (top + row.h) > 0 then
-      visible = true
-    end
-    if (top >= 0 or visible) and height < h then
-      table.insert(self.visible_rows, i)
-      first_visible = true
-      -- store only the visible height
-      if top < 0 then
-        height = height + (top + row.h)
-      else
-        --TODO: handle elements which full bottom isn't visible,
-        --for now we just append at least 2 more rows if possible
-        height = height + row.h
+    if row then
+      local top = row.y - colh + row.h + oy
+      local visible = false
+      local visible_area = h - top
+      if top < 0 and (top + row.h) > 0 then
+        visible = true
+      elseif top >= 0 and top < h then
+        visible = true
       end
-    elseif first_visible then
-      table.insert(self.visible_rows, i)
-      break
+      if visible and height <= h then
+        table.insert(self.visible_rows, i)
+        first_visible = true
+        -- store only the visible height
+        if top < 0 then
+          height = height + (top + row.h)
+        else
+          if visible_area > row.h then
+            height = height + row.h
+          else
+            height = height + visible_area
+          end
+        end
+      elseif first_visible then
+        table.insert(self.visible_rows, i)
+        break
+      end
     end
   end
 
   -- append one more row if possible to fill possible empty spaces of
-  -- incomplete row height calculation above
+  -- incomplete row height calculation above (bad math skills workarounds)
+  local last_row = self.visible_rows[#self.visible_rows]
+  local first_row = self.visible_rows[1]
   if #self.visible_rows > 0 then
-    local last_visible = self.visible_rows[#self.visible_rows]
+    if step == 1 then
+      if self.rows[last_row+1] then
+        table.insert(self.visible_rows, last_row+1)
+      end
+    else
+      if self.rows[first_row-2] and first_row-2 ~= 1 then
+        table.insert(self.visible_rows, first_row-2)
+      elseif self.rows[last_row+1] then
+        table.insert(self.visible_rows, last_row+1)
+      end
 
-    if self.rows[last_visible+1] then
-      table.insert(self.visible_rows, last_visible+1)
+      -- sort for proper subsequent loop interations
+      table.sort(
+        self.visible_rows,
+        function(val1, val2) return val1 < val2 end
+      )
+
+      local frow = self.visible_rows[1]
+      for i, _ in ipairs(self.visible_rows) do
+        if self.rows[frow] then
+          self.visible_rows[i] = frow
+          frow = frow + 1
+        end
+      end
     end
   end
 end
@@ -223,6 +267,15 @@ end
 ---Remove a given row index from the list.
 ---@param ridx integer
 function ListBox:remove_row(ridx)
+  if not self.rows[ridx] then return end
+
+  local last_col = false
+  local row_y = self.rows[ridx].y
+  local row_h = self.rows[ridx].h
+  if ridx == #self.rows then
+    last_col = true
+  end
+
   local fields = { "rows", "positions", "row_data" }
   for _, field in ipairs(fields) do
     array_remove(self[field], function(_, i, _)
@@ -237,7 +290,31 @@ function ListBox:remove_row(ridx)
       col.longest = nil
     end
   end
-  self:recalc_all_rows()
+
+  if not last_col and #self.rows > 0 then
+    for idx=ridx, #self.rows, 1 do
+      self.rows[idx].y = self.rows[idx].y - row_h
+    end
+  end
+
+  local visible_removed = false
+  array_remove(self.visible_rows, function(t, i, _)
+    if t[i] == ridx then
+      visible_removed = true
+      return false
+    end
+    return true
+  end)
+
+  -- make visible rows sequence correctly incremental
+  if visible_removed and #self.visible_rows > 0 then
+    local first_row = self.visible_rows[1]
+    for i, _ in ipairs(self.visible_rows) do
+      self.visible_rows[i] = first_row
+      first_row = first_row + 1
+    end
+    self:set_visible_rows()
+  end
 end
 
 ---Get the starting and ending position of columns in a row table.
