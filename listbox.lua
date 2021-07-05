@@ -241,6 +241,15 @@ function ListBox:set_visible_rows()
           frow = frow + 1
         end
       end
+      if #self.visible_rows > 1 then
+        if
+          self.visible_rows[#self.visible_rows]
+          ==
+          self.visible_rows[#self.visible_rows-1]
+        then
+          table.remove(self.visible_rows, #self.visible_rows)
+        end
+      end
     end
   end
 end
@@ -316,6 +325,33 @@ function ListBox:remove_row(ridx)
     end
     self:set_visible_rows()
   end
+end
+
+---Get the data associated with a row.
+---@param idx integer
+---@return any|nil
+function ListBox:get_row_data(idx)
+  if self.row_data[idx] then
+    return self.row_data[idx]
+  end
+  return nil
+end
+
+---Get the text only of a styled row.
+---@param idx integer
+---@return string
+function ListBox:get_row_text(idx)
+  local text = ""
+  if self.rows[idx] then
+    for _, element in ipairs(self.rows[idx]) do
+      if type(element) == "string" then
+        text = text .. element
+      elseif element == ListBox.NEWLINE then
+        text = text .. "\n"
+      end
+    end
+  end
+  return text
 end
 
 ---Get the starting and ending position of columns in a row table.
