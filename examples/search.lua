@@ -11,6 +11,7 @@ local Line = require "widget.line"
 local Label = require "widget.label"
 local TextBox = require "widget.textbox"
 local MessageBox = require "widget.messagebox"
+local SelectBox = require "widget.selectbox"
 
 local function on_button_click(self)
   MessageBox.info("Clicked:", self.label)
@@ -80,6 +81,15 @@ regex.on_checked = function(_, checked)
   core.log_quiet(tostring(checked))
 end
 
+---@type widget.selectbox
+local scope = SelectBox(widget, "scope")
+scope:set_position(10, regex:get_bottom() + 10)
+scope:add_option("current file")
+scope:add_option("project files")
+scope:add_option("some really long option to see")
+scope:add_option("other item")
+scope:add_option("other option")
+
 -- reposition items on scale changes
 widget.update = function(self)
   if Widget.update(self) then
@@ -95,6 +105,8 @@ widget.update = function(self)
     line_options:set_position(0, replace:get_bottom() + 10)
     insensitive:set_position(10, line_options:get_bottom() + 10)
     regex:set_position(10, insensitive:get_bottom() + 10)
+    scope:set_position(10, regex:get_bottom() + 10)
+    scope.size.x = self.size.x - 20
   end
 end
 
