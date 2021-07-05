@@ -29,6 +29,7 @@ local ListBoxColumn = {}
 ---@field private largest_row integer
 ---@field private expand boolean
 ---@field private visible_rows table<integer, integer>
+---@field private visible_rendered boolean
 ---@field private last_scale integer
 ---@field private last_offset integer
 local ListBox = Widget:extend()
@@ -367,40 +368,6 @@ function ListBox:clear()
     col.width = self:get_col_width(cidx)
     col.longest = nil
   end
-end
-
-local function lines(text)
-  return (text .. "\n"):gmatch("(.-)\n")
-end
-
----Taken from the logview and modified it a tiny bit.
----TODO: something similar should be on lite-xl core.
----@param font renderer.font
----@param text string
----@param x integer
----@param y integer
----@param color renderer.color
----@param only_calc boolean
----@return integer resx
----@return integer resy
----@return integer width
----@return integer height
-function ListBox:draw_text_multiline(font, text, x, y, color, only_calc)
-  local th = font:get_height()
-  local resx, resy = x, y
-  local width, height = 0, 0
-  for line in lines(text) do
-    resy = y
-    if only_calc then
-      resx = x + font:get_width(line)
-    else
-      resx = renderer.draw_text(font, line, x, y, color)
-    end
-    y = y + th
-    width = math.max(width, resx - x)
-    height = height + th
-  end
-  return resx, resy, width, height
 end
 
 ---Render or calculate the size of the specified range of elements in a row.
