@@ -102,6 +102,16 @@ function SelectBox:text_overflow(text, max_width, font, overflow_chars)
   return text, overflow
 end
 
+---Set the active option index.
+---@return integer
+function SelectBox:set_selected(idx)
+  if self.list.rows[idx+1] then
+    self.selected = idx
+  else
+    self.selected = 0
+  end
+end
+
 ---Get the currently selected option index.
 ---@return integer
 function SelectBox:get_selected()
