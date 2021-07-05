@@ -10,9 +10,10 @@ local CheckBox = require "widget.checkbox"
 local Line = require "widget.line"
 local Label = require "widget.label"
 local TextBox = require "widget.textbox"
+local MessageBox = require "widget.messagebox"
 
 local function on_button_click(self)
-  system.show_fatal_error("Clicked:", self.label)
+  MessageBox.info("Clicked:", self.label)
 end
 
 ---@type widget
