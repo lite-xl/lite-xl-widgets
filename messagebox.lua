@@ -18,7 +18,7 @@ local Label = require "widget.label"
 ---@field private buttons widtget.button[]
 local MessageBox = Widget:extend()
 
-MessageBox.icon_huge_font = style.icon_font:copy(70 * SCALE)
+MessageBox.icon_huge_font = style.icon_font:copy(50 * SCALE)
 
 MessageBox.ICON_ERROR = "X"
 MessageBox.ICON_INFO = "i"
