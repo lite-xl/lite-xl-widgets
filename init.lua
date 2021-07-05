@@ -30,9 +30,11 @@ local WidgetBorder = {}
 local WidgetPosition = {}
 
 ---
----@alias widtget.button
+---@alias widget.clicktype
 ---|>'"left"'
 ---| '"right"'
+
+---@alias widget.styledtext table<integer, renderer.font|renderer.color|integer|string>
 
 ---
 ---A base widget
@@ -45,6 +47,7 @@ local WidgetPosition = {}
 ---@field public child_active widget
 ---@field public zindex integer
 ---@field public border widget.border
+---@field public clickable boolean
 ---@field public draggable boolean
 ---@field public font renderer.font
 ---@field public foreground_color RendererColor
@@ -64,6 +67,10 @@ local WidgetPosition = {}
 ---@field private mouse_is_hovering boolean
 ---@field private was_scrolling boolean
 local Widget = View:extend()
+
+---Indicates on a widget.styledtext that a new line follows.
+---@type integer
+Widget.NEWLINE = 1
 
 ---
 ---When no parent is given to the widget constructor it will automatically
@@ -85,6 +92,7 @@ function Widget:new(parent)
   self.background_color = nil
   self.visible = parent and true or false
   self.has_focus = false
+  self.clickable = true
   self.draggable = false
   self.dragged = false
   self.font = style.font
@@ -221,6 +229,87 @@ function Widget:toggle_visible()
   end
 end
 
+---Taken from the logview and modified it a tiny bit.
+---TODO: something similar should be on lite-xl core.
+---@param font renderer.font
+---@param text string
+---@param x integer
+---@param y integer
+---@param color renderer.color
+---@param only_calc boolean
+---@return integer resx
+---@return integer resy
+---@return integer width
+---@return integer height
+function Widget:draw_text_multiline(font, text, x, y, color, only_calc)
+  local th = font:get_height()
+  local resx, resy = x, y
+  local width, height = 0, 0
+  for line in (text .. "\n"):gmatch("(.-)\n") do
+    resy = y
+    if only_calc then
+      resx = x + font:get_width(line)
+    else
+      resx = renderer.draw_text(font, line, x, y, color)
+    end
+    y = y + th
+    width = math.max(width, resx - x)
+    height = height + th
+  end
+  return resx, resy, width, height
+end
+
+---Render or calculate the size of the specified range of elements
+---in a styled text elemet.
+---@param text widget.styledtext
+---@param start_idx integer
+---@param end_idx integer
+---@param x integer
+---@param y integer
+---@param only_calc boolean
+---@return integer width
+---@return integer height
+function Widget:draw_styled_text(text, x, y, only_calc, start_idx, end_idx)
+  local font = self.font or style.font
+  local color = self.foreground_color or style.text
+  local width = 0
+  local height = font:get_height()
+  local new_line = false
+  local nx = x
+
+  start_idx = start_idx or 1
+  end_idx = end_idx or #text
+
+  for pos=start_idx, end_idx, 1 do
+    local element = text[pos]
+    if type(element) == "userdata" then
+      font = element
+    elseif type(element) == "table" then
+      color = element
+    elseif element == Widget.NEWLINE then
+      y = y + font:get_height()
+      nx = x
+      new_line = true
+    elseif type(element) == "string" then
+      local rx, ry, w, h = self:draw_text_multiline(
+        font, element, nx, y, color, only_calc
+      )
+      y = ry
+      nx = rx
+      if new_line then
+        height = height + h
+        width = math.max(width, w)
+        new_line = false
+      else
+        height = math.max(height, h)
+        width = width + w
+      end
+    end
+  end
+
+  return width, height
+end
+
 ---Draw the widget configured border or custom one.
 ---@param x? number
 ---@param y? number
@@ -253,12 +342,12 @@ function Widget:draw_border(x, y, w, h)
   )
   --bottom
   renderer.draw_rect(
-    x, y+h, w + x % 1, self.border.width,
+    x, y+h - self.border.width, w + x % 1, self.border.width,
     self.border.color or style.text
   )
   --right
   renderer.draw_rect(
-    x+w, y, self.border.width, h,
+    x+w - self.border.width, y, self.border.width, h,
     self.border.color or style.text
   )
   --left
@@ -486,7 +575,7 @@ function Widget:on_text_input(text)
 end
 
 ---Send mouse pressed events to hovered child or starts dragging if enabled.
----@param button widget.button
+---@param button widget.clicktype
 ---@param x number
 ---@param y number
 ---@param clicks integer
@@ -495,7 +584,7 @@ function Widget:on_mouse_pressed(button, x, y, clicks)
   if not self.visible then return end
 
   for _, child in pairs(self.childs) do
-    if child:mouse_on_top(x, y) then
+    if child:mouse_on_top(x, y) and child.clickable then
       child:on_mouse_pressed(button, x, y, clicks)
       return true
     end
@@ -537,7 +626,7 @@ end
 
 ---Send mouse released events to hovered child, ends dragging if enabled and
 ---emits on click events if applicable.
----@param button widget.button
+---@param button widget.clicktype
 ---@param x number
 ---@param y number
 ---@return boolean processed
@@ -610,7 +699,7 @@ end
 
 ---Click event emitted on a succesful on_mouse_pressed
 ---and on_mouse_released events combo.
----@param button widget.button
+---@param button widget.clicktype
 ---@param x number
 ---@param y number
 function Widget:on_click(button, x, y) end
