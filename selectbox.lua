@@ -103,7 +103,7 @@ function SelectBox:text_overflow(text, max_width, font, overflow_chars)
 end
 
 ---Set the active option index.
----@return integer
+---@param idx integer
 function SelectBox:set_selected(idx)
   if self.list.rows[idx+1] then
     self.selected = idx
@@ -222,7 +222,6 @@ function SelectBox:draw()
     self.label or self.list:get_row_text(self.selected+1)
 
   local text = self:text_overflow(item_text, max_width, font)
-  local text_width = font:get_width(text)
 
   -- draw label or selected item
   common.draw_text(
