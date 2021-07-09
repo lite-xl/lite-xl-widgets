@@ -143,7 +143,7 @@ end
 function ListBox:get_scrollable_size()
   local size = self.size.y
   local rows = #self.rows
-  if rows > 0 then
+  if rows > 0 and self.rows[rows].y then
     size = math.max(size, self.rows[rows].y + self.rows[rows].h)
   end
   return size
@@ -641,6 +641,10 @@ end
 function ListBox:draw()
   if not ListBox.super.draw(self) then return end
 
+  if #self.rows > 0 and #self.visible_rows <= 0 then
+    self:set_visible_rows()
+  end
+
   local new_width = 0
   local new_height = 0
 
@@ -649,6 +653,13 @@ function ListBox:draw()
     for _, col in ipairs(self.columns) do
       new_width = new_width + col.width + style.padding.x
     end
+  end
+
+  if self.expand then
+    self:resize_to_parent()
+
+    self.largest_row = self.size.x
+      - (self.parent.border.width * 2)
   end
 
   -- Normalize the offset position
@@ -676,13 +687,9 @@ function ListBox:draw()
   end
   core.pop_clip_rect()
 
-  if self.expand then
-    self:resize_to_parent()
-
-    self.largest_row = self.size.x
-      - (self.parent.border.width * 2)
-  else
+  if not self.expand then
     self.largest_row = math.max(new_width, self:get_width() - (self.border.width*2))
+    self.size.x = self.largest_row
   end
 
   if #self.columns > 0 then
