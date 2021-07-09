@@ -41,6 +41,7 @@ local WidgetPosition = {}
 ---@class widget @global
 ---@field public super widget
 ---@field public parent widget
+---@field public name string
 ---@field public position widget.position
 ---@field public size widget.position
 ---@field public childs table<integer,widget>
@@ -80,6 +81,8 @@ function Widget:new(parent)
   Widget.super.new(self)
 
   self.parent = parent
+  self.name = "---" -- defaults to the application name
+  self.defer_draw = true
   self.childs = {}
   self.child_active = nil
   self.zindex = nil
@@ -126,7 +129,7 @@ function Widget:new(parent)
     function RootView:on_mouse_pressed(button, x, y, clicks)
       mouse_pressed_outside = not this:mouse_on_top(x, y)
       if
-        mouse_pressed_outside
+        not this.defer_draw or mouse_pressed_outside
         or
         not this:on_mouse_pressed(button, x, y, clicks)
       then
@@ -136,26 +139,33 @@ function Widget:new(parent)
     end
 
     function RootView:on_mouse_released(...)
-      if mouse_pressed_outside or not this:on_mouse_released(...) then
+      if
+        not this.defer_draw or mouse_pressed_outside or
+        not this:on_mouse_released(...)
+      then
         root_view_on_mouse_released(self, ...)
         mouse_pressed_outside = false
       end
     end
 
     function RootView:on_mouse_moved(...)
-      if mouse_pressed_outside or not this:on_mouse_moved(...) then
+      if
+        not this.defer_draw or mouse_pressed_outside
+        or
+        not this:on_mouse_moved(...)
+      then
         root_view_on_mouse_moved(self, ...)
       end
     end
 
     function RootView:on_mouse_wheel(...)
-      if not this:on_mouse_wheel(...) then
+      if not this.defer_draw or not this:on_mouse_wheel(...) then
         root_view_on_mouse_wheel(self, ...)
       end
     end
 
     function RootView:on_text_input(...)
-      if not this:on_text_input(...) then
+      if not this.defer_draw or not this:on_text_input(...) then
         root_view_on_text_input(self, ...)
       end
     end
@@ -167,7 +177,7 @@ function Widget:new(parent)
 
     function RootView:draw()
       root_view_draw(self)
-      if this.visible then
+      if this.visible and this.defer_draw then
         core.root_view:defer_draw(this.draw, this)
       end
     end
@@ -552,6 +562,11 @@ function Widget:get_scrollable_size()
     bottom_position = math.max(bottom_position, child:get_bottom())
   end
   return bottom_position
+end
+
+---The name that is displayed on lite-xl tabs.
+function Widget:get_name()
+  return self.name
 end
 
 --
