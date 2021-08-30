@@ -1,4 +1,4 @@
--- mod-version:1 lite-xl 1.16
+-- mod-version:2 -- lite-xl 2.00
 --
 -- Base widget implementation for lite.
 -- @copyright Jefferson Gonzalez
@@ -172,7 +172,9 @@ function Widget:new(parent)
 
     function RootView:update()
       root_view_update(self)
-      this:update()
+      if this.defer_draw then
+        this:update()
+      end
     end
 
     function RootView:draw()
