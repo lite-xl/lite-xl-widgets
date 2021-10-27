@@ -111,6 +111,20 @@ function TextBox:new(parent, text, placeholder)
     self.placeholder_active = true
     self.textview:set_text(self.placeholder)
   end
+
+  -- more granular listening of text changing events
+  local this = self
+  local doc_raw_insert = self.textview.doc.raw_insert
+  function self.textview.doc:raw_insert(...)
+    doc_raw_insert(self, ...)
+    this:on_text_change("insert", ...)
+  end
+
+  local doc_raw_remove = self.textview.doc.raw_remove
+  function self.textview.doc:raw_remove(...)
+    doc_raw_remove(self, ...)
+    this:on_text_change("remove", ...)
+  end
 end
 
 --- Get the text displayed on the textbox.
@@ -171,6 +185,14 @@ function TextBox:on_text_input(text)
   TextBox.super.on_text_input(self, text)
   self.textview:on_text_input(text)
 end
+
+---Event fired on any text change event.
+---@param action string Can be "insert" or "remove",
+---insert arguments (see Doc:raw_insert):
+---  line, col, text, undo_stack, time
+---remove arguments (see Doc:raw_remove):
+---  line1, col1, line2, col2, undo_stack, time
+function TextBox:on_text_change(action, ...) end
 
 function TextBox:update()
   TextBox.super.update(self)
