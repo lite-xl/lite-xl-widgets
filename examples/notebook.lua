@@ -65,19 +65,25 @@ listbox:add_row({
   ListBox.COLEND,
   "Another message to display to the user\nwith new line characters\nfor the win."
 })
-for num=1, 1000 do
+
+core.add_thread(function()
+  for num=1, 200000 do
+    listbox:add_row({
+      style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
+      ListBox.COLEND,
+      tostring(num),
+      " Another message to display to the user\nwith new line characters\nfor the win."
+    }, num)
+    if num % 100 == 0 then
+      coroutine.yield()
+    end
+  end
   listbox:add_row({
     style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
     ListBox.COLEND,
-    tostring(num),
-    " Another message to display to the user\nwith new line characters\nfor the win."
-  }, num)
-end
-listbox:add_row({
-  style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
-  ListBox.COLEND,
-  "Final message to display."
-})
+    "Final message to display."
+  })
+end)
 
 listbox.on_row_click = function(self, idx, data)
   if data then
@@ -86,9 +92,12 @@ listbox.on_row_click = function(self, idx, data)
   self:remove_row(idx)
 end
 
+-- defer draw needs to be set to false when adding widget as a lite-xl node
+notebook.defer_draw = false
+
 notebook:show()
 
--- You can add the widget as a lite node
+-- You can add the widget as a lite-xl node
 local node = core.root_view:get_active_node()
 node:split("down", notebook, {y=true}, true)
 

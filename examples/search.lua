@@ -112,9 +112,10 @@ end
 
 widget:show()
 
--- You can add the widget as a lite node
+-- You can add the widget as a lite-xl node
 widget.border.width = 0
 widget.draggable = false
+widget.defer_draw = false
 widget.target_size = 250
 local node = core.root_view:get_active_node()
 node:split("right", widget, {x=true}, true)
