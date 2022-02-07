@@ -6,6 +6,7 @@
 --
 
 local core = require "core"
+local config = require "core.config"
 local style = require "core.style"
 local View = require "core.view"
 local DocView = require "core.docview"
@@ -134,39 +135,43 @@ function Widget:new(parent)
         not this:on_mouse_pressed(button, x, y, clicks)
       then
         this:swap_active_child()
-        root_view_on_mouse_pressed(self, button, x, y, clicks)
+        return root_view_on_mouse_pressed(self, button, x, y, clicks)
+      else
+        return true
       end
     end
 
-    function RootView:on_mouse_released(...)
+    function RootView:on_mouse_released(button, x, y)
       if
         not this.defer_draw or mouse_pressed_outside or
-        not this:on_mouse_released(...)
+        not this:on_mouse_released(button, x, y)
       then
-        root_view_on_mouse_released(self, ...)
+        root_view_on_mouse_released(self, button, x, y)
         mouse_pressed_outside = false
       end
     end
 
-    function RootView:on_mouse_moved(...)
+    function RootView:on_mouse_moved(x, y, dx, dy)
       if
         not this.defer_draw or mouse_pressed_outside
         or
-        not this:on_mouse_moved(...)
+        not this:on_mouse_moved(x, y, dx, dy)
       then
-        root_view_on_mouse_moved(self, ...)
+        root_view_on_mouse_moved(self, x, y, dx, dy)
       end
     end
 
-    function RootView:on_mouse_wheel(...)
-      if not this.defer_draw or not this:on_mouse_wheel(...) then
-        root_view_on_mouse_wheel(self, ...)
+    function RootView:on_mouse_wheel(y)
+      if not this.defer_draw or not this:on_mouse_wheel(y) then
+        return root_view_on_mouse_wheel(self, y)
+      else
+        return true
       end
     end
 
-    function RootView:on_text_input(...)
-      if not this.defer_draw or not this:on_text_input(...) then
-        root_view_on_text_input(self, ...)
+    function RootView:on_text_input(text)
+      if not this.defer_draw or not this:on_text_input(text) then
+        root_view_on_text_input(self, text)
       end
     end
 
@@ -736,7 +741,7 @@ function Widget:deactivate() end
 ---@param dx number
 ---@param dy number
 function Widget:on_mouse_moved(x, y, dx, dy)
-  if not self.visible then return end
+  if not self.visible then return false end
 
   -- store latest mouse coordinates for usage on the on_mouse_wheel event.
   self.mouse.x = x
@@ -837,7 +842,7 @@ function Widget:on_mouse_wheel(y)
     or
     not self:mouse_on_top(self.mouse.x, self.mouse.y)
   then
-    return
+    return false
   end
 
   for _, child in pairs(self.childs) do
@@ -849,7 +854,7 @@ function Widget:on_mouse_wheel(y)
   end
 
   if self.scrollable then
-    Widget.super.on_mouse_wheel(self, y)
+    self.scroll.to.y = self.scroll.to.y + y * -config.mouse_wheel_scroll
     return true
   end
 
