@@ -3,6 +3,7 @@
 --
 
 local core = require "core"
+local keymap = require "core.keymap"
 local command = require "core.command"
 local style = require "core.style"
 local NoteBook = require "widget.notebook"
@@ -93,16 +94,26 @@ listbox.on_row_click = function(self, idx, data)
 end
 
 -- defer draw needs to be set to false when adding widget as a lite-xl node
+notebook.border.width = 0
+notebook.draggable = false
 notebook.defer_draw = false
 
-notebook:show()
+local inside_node = false
 
 -- You can add the widget as a lite-xl node
-local node = core.root_view:get_active_node()
-node:split("down", notebook, {y=true}, true)
-
 command.add(nil,{
   ["notebook-widget:toggle"] = function()
-    notebook:toggle_visible()
+    if inside_node then
+      notebook:toggle_visible()
+    else
+      local node = core.root_view:get_active_node()
+      node:split("down", notebook, {y=true}, true)
+      notebook:show()
+      inside_node = true
+    end
   end
 })
+
+keymap.add {
+  ["alt+shift+m"] = "notebook-widget:toggle",
+}

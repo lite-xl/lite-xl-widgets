@@ -3,6 +3,7 @@
 --
 
 local style = require "core.style"
+local command = require "core.command"
 local Widget = require "widget"
 local ListBox = require "widget.listbox"
 
@@ -44,3 +45,9 @@ listbox.on_row_click = function(self, idx, data)
 end
 
 widget:show()
+
+command.add(nil,{
+  ["listbox-widget:toggle"] = function()
+    widget:toggle_visible()
+  end
+})

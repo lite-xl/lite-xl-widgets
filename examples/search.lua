@@ -19,7 +19,8 @@ end
 
 ---@type widget
 local widget = Widget()
-widget.size.x = 250
+widget.name = "Search and Replace"
+widget.size.x = 300
 widget.size.y = 300
 widget.position.x = 100
 widget.draggable = true
@@ -117,6 +118,7 @@ widget.border.width = 0
 widget.draggable = false
 widget.defer_draw = false
 widget.target_size = 250
+
 local node = core.root_view:get_active_node()
 node:split("right", widget, {x=true}, true)
 
