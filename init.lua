@@ -112,6 +112,8 @@ function Widget:new(parent)
   self.mouse_is_pressed = false
   self.mouse_is_hovering = false
 
+  self.current_scale = SCALE
+
   self:set_position(0, 0)
 
   if parent then
@@ -130,9 +132,9 @@ function Widget:new(parent)
     function RootView:on_mouse_pressed(button, x, y, clicks)
       mouse_pressed_outside = not this:mouse_on_top(x, y)
       if
-        not this.defer_draw or mouse_pressed_outside
+        (not this.defer_draw and not this.child_active)
         or
-        not this:on_mouse_pressed(button, x, y, clicks)
+        mouse_pressed_outside or not this:on_mouse_pressed(button, x, y, clicks)
       then
         this:swap_active_child()
         return root_view_on_mouse_pressed(self, button, x, y, clicks)
@@ -143,8 +145,9 @@ function Widget:new(parent)
 
     function RootView:on_mouse_released(button, x, y)
       if
-        not this.defer_draw or mouse_pressed_outside or
-        not this:on_mouse_released(button, x, y)
+        (not this.defer_draw and not this.child_active)
+        or
+        mouse_pressed_outside or not this:on_mouse_released(button, x, y)
       then
         root_view_on_mouse_released(self, button, x, y)
         mouse_pressed_outside = false
@@ -153,11 +156,22 @@ function Widget:new(parent)
 
     function RootView:on_mouse_moved(x, y, dx, dy)
       if
-        not this.defer_draw or mouse_pressed_outside
+        (not this.defer_draw and not this.child_active)
         or
-        not this:on_mouse_moved(x, y, dx, dy)
+        mouse_pressed_outside or not this:on_mouse_moved(x, y, dx, dy)
       then
-        root_view_on_mouse_moved(self, x, y, dx, dy)
+          if not this.child_active and this.outside_view then
+            core.set_active_view(this.outside_view)
+            this.outside_view = nil
+          end
+          root_view_on_mouse_moved(self, x, y, dx, dy)
+      else
+        if not this.child_active and this.defer_draw then
+          if not this.outside_view then
+            this.outside_view = core.active_view
+          end
+          core.set_active_view(this)
+        end
       end
     end
 
@@ -536,7 +550,10 @@ end
 function Widget:swap_active_child(child)
   if self.parent then
     self.parent:swap_active_child(child)
+    return
   end
+
+  local active_child = self.child_active
 
   if self.child_active then
     self.child_active:deactivate()
@@ -545,18 +562,18 @@ function Widget:swap_active_child(child)
   self.child_active = child
 
   if child then
-    if
-      not self.prev_view
-      and
-      getmetatable(core.active_view) == DocView
-    then
+    if not self.prev_view then
       self.prev_view = core.active_view
     end
+    core.set_active_view(child.input_text and child.textview or child)
     self.child_active:activate()
-    core.set_active_view(child.textview)
   elseif self.prev_view then
-    -- return focus to previous docview
-    core.set_active_view(self.prev_view)
+    -- return focus to previous view
+    if self.prev_view ~= active_child then
+      core.set_active_view(self.prev_view)
+    else
+      core.set_active_view(self)
+    end
     self.prev_view = nil
   end
 end
@@ -603,7 +620,7 @@ end
 ---@param clicks integer
 ---@return boolean processed
 function Widget:on_mouse_pressed(button, x, y, clicks)
-  if not self.visible then return end
+  if not self.visible then return false end
 
   for _, child in pairs(self.childs) do
     if child:mouse_on_top(x, y) and child.clickable then
@@ -653,9 +670,9 @@ end
 ---@param y number
 ---@return boolean processed
 function Widget:on_mouse_released(button, x, y)
-  if not self.visible then return end
+  if not self.visible then return false end
 
-  self:swap_active_child()
+  -- self:swap_active_child()
 
   if not self.dragged then
     for _, child in pairs(self.childs) do
@@ -667,6 +684,9 @@ function Widget:on_mouse_released(button, x, y)
         or
         child.mouse_is_pressed
       then
+        if child ~= self.child_active then
+          self:swap_active_child()
+        end
         child:on_mouse_released(button, x, y)
         if child.input_text then
           self:swap_active_child(child)
@@ -686,7 +706,7 @@ function Widget:on_mouse_released(button, x, y)
     if self.parent then
       self.parent.was_scrolling = false
     end
-    return
+    return false
   end
 
   if
@@ -787,7 +807,7 @@ function Widget:on_mouse_moved(x, y, dx, dy)
       return true
     end
   else
-    return
+    return false
   end
 
   local is_over = true
@@ -890,6 +910,16 @@ end
 
 function Widget:draw()
   if not self.visible then return end
+
+  if self.current_scale ~= SCALE then
+    if self.font ~= style.font then
+      -- TODO: Font Scaling
+      -- implement font scaling since it seems now lite-xl overwrites style.font
+      -- instead of just changing its size which results on widget having
+      -- another copy of the style.font
+      self.current_scale = SCALE
+    end
+  end
 
   Widget.super.draw(self)
 
