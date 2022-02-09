@@ -672,7 +672,7 @@ end
 function Widget:on_mouse_released(button, x, y)
   if not self.visible then return false end
 
-  -- self:swap_active_child()
+  self:swap_active_child()
 
   if not self.dragged then
     for _, child in pairs(self.childs) do
@@ -684,9 +684,9 @@ function Widget:on_mouse_released(button, x, y)
         or
         child.mouse_is_pressed
       then
-        if child ~= self.child_active then
-          self:swap_active_child()
-        end
+        -- if child ~= self.child_active then
+        --   self:swap_active_child()
+        -- end
         child:on_mouse_released(button, x, y)
         if child.input_text then
           self:swap_active_child(child)
@@ -884,6 +884,15 @@ end
 function Widget:update()
   if not self.visible then return end
 
+  if self.current_scale ~= SCALE then
+    if self.font ~= style.font then
+      self.font = self.font:copy(
+        self.font:get_size() * (SCALE / self.current_scale)
+      )
+      self.current_scale = SCALE
+    end
+  end
+
   Widget.super.update(self)
 
   -- call this to be able to properly scroll
@@ -910,16 +919,6 @@ end
 
 function Widget:draw()
   if not self.visible then return end
-
-  if self.current_scale ~= SCALE then
-    if self.font ~= style.font then
-      -- TODO: Font Scaling
-      -- implement font scaling since it seems now lite-xl overwrites style.font
-      -- instead of just changing its size which results on widget having
-      -- another copy of the style.font
-      self.current_scale = SCALE
-    end
-  end
 
   Widget.super.draw(self)
 

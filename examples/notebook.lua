@@ -106,7 +106,7 @@ command.add(nil,{
     if inside_node then
       notebook:toggle_visible()
     else
-      local node = core.root_view:get_active_node()
+      local node = core.root_view:get_primary_node()
       node:split("down", notebook, {y=true}, true)
       notebook:show()
       inside_node = true
