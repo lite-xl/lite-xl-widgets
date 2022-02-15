@@ -111,9 +111,9 @@ end
 
 ---Set or remove the icon for the given pane.
 ---@param name string
----@param icon? RendererColor|nil
----@param color? RendererColor|nil
----@param hover_color? RendererColor|nil
+---@param icon? renderer.color|nil
+---@param color? renderer.color|nil
+---@param hover_color? renderer.color|nil
 function NoteBook:set_pane_icon(name, icon, color, hover_color)
   local pane = self:get_pane(name)
   if pane then

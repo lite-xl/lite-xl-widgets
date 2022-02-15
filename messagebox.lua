@@ -15,7 +15,7 @@ local Label = require "widget.label"
 ---@field private title widget.label
 ---@field private icon widget.label
 ---@field private message widget.label
----@field private buttons widtget.button[]
+---@field private buttons widget.button[]
 local MessageBox = Widget:extend()
 
 MessageBox.icon_huge_font = style.icon_font:copy(50 * SCALE)

@@ -9,8 +9,8 @@ local Widget = require "widget"
 
 ---@class widget.button.icon
 ---@field public code string
----@field public color RendererColor
----@field public hover_color RendererColor
+---@field public color renderer.color
+---@field public hover_color renderer.color
 local ButtonIcon = {}
 
 ---@class widget.button : widget
