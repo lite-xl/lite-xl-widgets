@@ -9,14 +9,13 @@ local core = require "core"
 local config = require "core.config"
 local style = require "core.style"
 local View = require "core.view"
-local DocView = require "core.docview"
 local RootView = require "core.rootview"
 
 ---
 ---Represents the border of a widget.
 ---@class widget.border
 ---@field public width number
----@field public color RendererColor
+---@field public color renderer.color
 local WidgetBorder = {}
 
 ---
@@ -52,8 +51,8 @@ local WidgetPosition = {}
 ---@field public clickable boolean
 ---@field public draggable boolean
 ---@field public font renderer.font
----@field public foreground_color RendererColor
----@field public background_color RendererColor
+---@field public foreground_color renderer.color
+---@field public background_color renderer.color
 ---@field private visible boolean
 ---@field private has_focus boolean
 ---@field private dragged boolean
@@ -127,6 +126,7 @@ function Widget:new(parent)
     local root_view_on_mouse_wheel = RootView.on_mouse_wheel
     local root_view_update = RootView.update
     local root_view_draw = RootView.draw
+    local root_view_on_file_dropped = RootView.on_file_dropped
     local root_view_on_text_input = RootView.on_text_input
 
     function RootView:on_mouse_pressed(button, x, y, clicks)
@@ -178,6 +178,14 @@ function Widget:new(parent)
     function RootView:on_mouse_wheel(y)
       if not this.defer_draw or not this:on_mouse_wheel(y) then
         return root_view_on_mouse_wheel(self, y)
+      else
+        return true
+      end
+    end
+
+    function RootView:on_file_dropped(filename, x, y)
+      if not this.defer_draw or not this:on_file_dropped(filename, x, y) then
+        return root_view_on_file_dropped(self, filename, x, y)
       else
         return true
       end
@@ -597,11 +605,28 @@ end
 -- Events
 --
 
+---Send file drop event to hovered child.
+---@param filename string
+---@param x number
+---@param y number
+---@return boolean processed
+function Widget:on_file_dropped(filename, x, y)
+  if not self.visible then return false end
+
+  for _, child in pairs(self.childs) do
+    if child:mouse_on_top(x, y) then
+      return child:on_file_dropped(filename, x, y)
+    end
+  end
+
+  return false
+end
+
 ---Redirects any text input to active child with the input_text flag.
 ---@param text string
 ---@return boolean processed
 function Widget:on_text_input(text)
-  if not self.visible then return end
+  if not self.visible then return false end
 
   Widget.super.on_text_input(self, text)
 
