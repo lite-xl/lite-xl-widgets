@@ -26,8 +26,14 @@ function CheckBox:set_label(text)
   self.size.y = self.font:get_height()
 end
 
+---@param checked boolean
 function CheckBox:set_checked(checked)
   self.checked = checked
+end
+
+---@return boolean
+function CheckBox:is_checked()
+  return self.checked
 end
 
 function CheckBox:on_mouse_enter(...)
