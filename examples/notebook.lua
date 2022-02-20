@@ -9,6 +9,7 @@ local style = require "core.style"
 local NoteBook = require "widget.notebook"
 local Button = require "widget.button"
 local TextBox = require "widget.textbox"
+local NumberBox = require "widget.numberbox"
 local CheckBox = require "widget.checkbox"
 local ListBox = require "widget.listbox"
 
@@ -30,6 +31,10 @@ notebook:set_pane_icon("errors", "!")
 ---@type widget.textbox
 local textbox = TextBox(log, "", "placeholder...")
 textbox:set_position(10, 20)
+
+---@type widget.numberbox
+local numberbox = NumberBox(log, 10)
+numberbox:set_position(10, textbox:get_bottom() + 20)
 
 ---@type widget.checkbox
 local checkbox = CheckBox(build, "Child checkbox")
@@ -68,7 +73,7 @@ listbox:add_row({
 })
 
 core.add_thread(function()
-  for num=1, 200000 do
+  for num=1, 1000 do
     listbox:add_row({
       style.icon_font, style.syntax.string, "!", style.font, style.text, " Error",
       ListBox.COLEND,
