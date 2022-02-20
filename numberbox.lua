@@ -19,7 +19,7 @@ local TextBox = require "widget.textbox"
 local NumberBox = Widget:extend()
 
 function NumberBox:new(parent, value, min, max, step)
-  NumberBox.super.new(self, parent, "number")
+  NumberBox.super.new(self, parent)
 
   self.scrollable = true
 
