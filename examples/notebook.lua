@@ -10,6 +10,7 @@ local NoteBook = require "widget.notebook"
 local Button = require "widget.button"
 local TextBox = require "widget.textbox"
 local NumberBox = require "widget.numberbox"
+local Toggle = require "widget.toggle"
 local CheckBox = require "widget.checkbox"
 local ListBox = require "widget.listbox"
 
@@ -35,6 +36,10 @@ textbox:set_position(10, 20)
 ---@type widget.numberbox
 local numberbox = NumberBox(log, 10)
 numberbox:set_position(10, textbox:get_bottom() + 20)
+
+---@type widget.toggle
+local toggle = Toggle(log, "The Toggle:", true)
+toggle:set_position(10, numberbox:get_bottom() + 20)
 
 ---@type widget.checkbox
 local checkbox = CheckBox(build, "Child checkbox")
