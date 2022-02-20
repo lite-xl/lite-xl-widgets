@@ -77,11 +77,14 @@ function Toggle:update()
 
   if not self.switch_x then
     self.switch_x = switch_x
-    self.toggle_bg = self.enabled and style.caret or style.dim
+    self.toggle_bg = {}
+    local color = self.enabled and style.caret or style.dim
+    for i=1, 4, 1 do self.toggle_bg[i] = color[i] end
   else
+    local color = self.enabled and style.caret or style.dim
     self:move_towards(self, "switch_x", switch_x, 0.2)
-    if self.switch_x == switch_x then
-      self.toggle_bg = self.enabled and style.caret or style.dim
+    for i=1, 4, 1 do
+      self:move_towards(self.toggle_bg, i, color[i], 0.2)
     end
   end
 
