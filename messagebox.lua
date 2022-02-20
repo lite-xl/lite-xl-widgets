@@ -169,7 +169,7 @@ function MessageBox:on_close(button_id, button)
 end
 
 function MessageBox:update()
-  if not MessageBox.super.update(self) then return end
+  if not MessageBox.super.update(self) then return false end
 
   if self.last_scale ~= SCALE then
     MessageBox.icon_huge_font = style.icon_font:copy(50 * SCALE)
@@ -225,11 +225,13 @@ function MessageBox:update()
   end
 
   self:reposition_buttons()
+
+  return true
 end
 
 ---We overwrite default draw function to draw the title background.
 function MessageBox:draw()
-  if not self.visible then return end
+  if not self:is_visible() then return false end
 
   Widget.super.draw(self)
 

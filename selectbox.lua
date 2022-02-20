@@ -191,7 +191,7 @@ function SelectBox:on_click(button, x, y)
 end
 
 function SelectBox:update()
-  if not SelectBox.super.update(self) then return end
+  if not SelectBox.super.update(self) then return false end
 
   local font = self.font or style.font
 
@@ -204,10 +204,12 @@ function SelectBox:update()
   then
     self:reposition_container()
   end
+
+  return true
 end
 
 function SelectBox:draw()
-  if not SelectBox.super.draw(self) then return end
+  if not SelectBox.super.draw(self) then return false end
 
   local font = self.font or style.font
 
@@ -246,6 +248,8 @@ function SelectBox:draw()
     self.size.x - style.padding.x,
     self.size.y
   )
+
+  return true
 end
 
 

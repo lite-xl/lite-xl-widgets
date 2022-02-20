@@ -268,6 +268,17 @@ function Widget:toggle_visible()
   end
 end
 
+---Check if the widget is visible also recursing to the parent visibility.
+---@return boolean
+function Widget:is_visible()
+  if
+    not self.visible or (self.parent and not self.parent:is_visible())
+  then
+    return false
+  end
+  return true
+end
+
 ---Taken from the logview and modified it a tiny bit.
 ---TODO: something similar should be on lite-xl core.
 ---@param font renderer.font
@@ -906,8 +917,10 @@ function Widget:on_mouse_wheel(y)
   return false
 end
 
+---If visible execute the widget calculations and returns true.
+---@return boolean
 function Widget:update()
-  if not self.visible then return end
+  if not self:is_visible() then return false end
 
   if self.current_scale ~= SCALE then
     if self.font ~= style.font then
@@ -942,8 +955,10 @@ function Widget:update()
   return true
 end
 
+---If visible draw the widget and returns true.
+---@return boolean
 function Widget:draw()
-  if not self.visible then return end
+  if not self:is_visible() then return false end
 
   Widget.super.draw(self)
 

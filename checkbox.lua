@@ -49,13 +49,6 @@ end
 
 function CheckBox:on_checked(checked) end
 
-function CheckBox:update()
-  CheckBox.super.update(self)
-
-  -- update size
-  self:set_label(self.label)
-end
-
 function CheckBox:get_box_rect()
   local size = 1.6
   local fh = self.font:get_height() / size
@@ -66,7 +59,18 @@ function CheckBox:get_box_rect()
     fh
 end
 
+function CheckBox:update()
+  if not CheckBox.super.update(self) then return false end
+
+  -- update size
+  self:set_label(self.label)
+
+  return true
+end
+
 function CheckBox:draw()
+  if not self:is_visible() then return false end
+
   local bx, by, bw, bh = self:get_box_rect()
 
   self:draw_border(bx, by, bw, bh)
@@ -87,6 +91,8 @@ function CheckBox:draw()
     self.position.y,
     self.hover_text or self.foreground_color or style.text
   )
+
+  return true
 end
 
 

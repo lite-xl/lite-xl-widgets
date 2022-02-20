@@ -29,17 +29,16 @@ function Label:set_label(text)
 end
 
 function Label:update()
-  if not Label.super.update(self) then return end
+  if not Label.super.update(self) then return false end
+
   -- update the size
   self:set_label(self.label)
+
+  return true
 end
 
 function Label:draw()
-  if
-    not self.visible or (self.parent and not self.parent.visible)
-  then
-    return
-  end
+  if not self:is_visible() then return false end
 
   if type(self.label) == "table" then
     self:draw_styled_text(self.label, self.position.x, self.position.y)
@@ -52,6 +51,8 @@ function Label:draw()
       self.foreground_color or style.text
     )
   end
+
+  return true
 end
 
 

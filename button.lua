@@ -71,15 +71,18 @@ function Button:on_mouse_leave(...)
 end
 
 function Button:update()
-  Button.super.update(self)
+  if not Button.super.update(self) then return false end
+
   -- update size
   self:set_label(self.label)
+
+  return true
 end
 
 function Button:draw()
   self.background_color = self.hover_back or style.background
 
-  Button.super.draw(self)
+  if not Button.super.draw(self) then return false end
 
   local offsetx = self.position.x + self.padding.x
   local offsety = self.position.y + self.padding.y
@@ -104,6 +107,8 @@ function Button:draw()
     offsety,
     self.hover_text or self.foreground_color or style.text
   )
+
+  return true
 end
 
 

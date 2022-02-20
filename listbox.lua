@@ -618,7 +618,7 @@ end
 function ListBox:on_row_click(idx, data) end
 
 function ListBox:update()
-  if not ListBox.super.update(self) then return end
+  if not ListBox.super.update(self) then return false end
 
   -- only calculate columns width on scale change since this can be expensive
   if self.last_scale ~= SCALE then
@@ -636,10 +636,12 @@ function ListBox:update()
     self:set_visible_rows()
     self.last_offset = oy
   end
+
+  return true
 end
 
 function ListBox:draw()
-  if not ListBox.super.draw(self) then return end
+  if not ListBox.super.draw(self) then return false end
 
   if #self.rows > 0 and #self.visible_rows <= 0 then
     self:set_visible_rows()
@@ -704,6 +706,8 @@ function ListBox:draw()
   if self.scrollable then
     self:draw_scrollbar()
   end
+
+  return true
 end
 
 

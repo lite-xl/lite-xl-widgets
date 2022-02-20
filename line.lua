@@ -22,6 +22,8 @@ function Line:set_thickness(thickness)
 end
 
 function Line:draw()
+  if not self:is_visible() then return false end
+
   self.size.x = self.parent.size.x
 
   renderer.draw_rect(
@@ -31,6 +33,8 @@ function Line:draw()
     self.size.y,
     self.foreground_color or style.caret
   )
+
+  return true
 end
 
 

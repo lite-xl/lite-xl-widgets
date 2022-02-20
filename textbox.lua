@@ -112,6 +112,7 @@ function TextBox:new(parent, text, placeholder)
   self.textview = TextView()
   self.textview.name = parent.name
   self.size.x = 200 + (style.padding.x * 2)
+  self.textview.size.x = self.size.x
   self.size.y = self.font:get_height() + (style.padding.y * 2)
   self.placeholder = placeholder or ""
   self.placeholder_active = false
@@ -140,6 +141,17 @@ function TextBox:new(parent, text, placeholder)
     doc_raw_remove(self, ...)
     this:on_text_change("remove", ...)
   end
+end
+
+---@param width integer
+---@param height integer Ignored on the textbox
+function TextBox:set_size(width, height)
+  TextBox.super.set_size(
+    self,
+    width,
+    self.font:get_height() + (style.padding.y * 2)
+  )
+  self.textview.size.x = self.size.x
 end
 
 --- Get the text displayed on the textbox.
@@ -227,12 +239,17 @@ end
 function TextBox:on_text_change(action, ...) end
 
 function TextBox:update()
-  TextBox.super.update(self)
+  if not TextBox.super.update(self) then return false end
+
   self.textview:update()
   self.size.y = self.font:get_height() + (style.padding.y * 2)
+
+  return true
 end
 
 function TextBox:draw()
+  if not self:is_visible() then return false end
+
   self.border.color = self.hover_border or style.text
   TextBox.super.draw(self)
   self.textview.position.x = self.position.x + (style.padding.x / 2)
@@ -248,6 +265,8 @@ function TextBox:draw()
   )
   self.textview:draw()
   core.pop_clip_rect()
+
+  return true
 end
 
 
