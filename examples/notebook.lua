@@ -11,6 +11,7 @@ local Button = require "widget.button"
 local TextBox = require "widget.textbox"
 local NumberBox = require "widget.numberbox"
 local Toggle = require "widget.toggle"
+local ProgressBar = require "widget.progressbar"
 local CheckBox = require "widget.checkbox"
 local ListBox = require "widget.listbox"
 
@@ -40,6 +41,10 @@ numberbox:set_position(10, textbox:get_bottom() + 20)
 ---@type widget.toggle
 local toggle = Toggle(log, "The Toggle:", true)
 toggle:set_position(10, numberbox:get_bottom() + 20)
+
+---@type widget.progressbar
+local progress = ProgressBar(log, 33)
+progress:set_position(textbox:get_right() + 50, 20)
 
 ---@type widget.checkbox
 local checkbox = CheckBox(build, "Child checkbox")
