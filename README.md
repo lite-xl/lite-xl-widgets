@@ -18,6 +18,7 @@ GUI controls.
 
 Components currently provided by this plugin are:
 
+* [Base Widget](init.lua)
 * [Button](button.lua)
 * [CheckBox](checkbox.lua)
 * [Label](label.lua)
@@ -61,7 +62,7 @@ Non floating mockup of a search side bar:
 
 https://user-images.githubusercontent.com/1702572/160674403-d0fcea4f-6b94-496c-b150-1c7372c93f29.mp4
 
-A bottom MoteBook with tabs and various widgets inside.
+A bottom NoteBook with tabs and various widgets inside.
 
 https://user-images.githubusercontent.com/1702572/160674477-e89d4aa1-ce21-4e50-b1c7-b30ab58cbcde.mp4
 
