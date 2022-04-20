@@ -702,10 +702,7 @@ function ListBox:draw()
   end
 
   self:draw_border()
-
-  if self.scrollable then
-    self:draw_scrollbar()
-  end
+  self:draw_scrollbar()
 
   return true
 end

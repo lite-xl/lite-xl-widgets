@@ -98,6 +98,7 @@ function NumberBox:set_value(value)
   end
   self.textbox.placeholder_active = false
   self.current_text = self.textbox:get_text()
+  self:on_change(tonumber(self.current_text))
 end
 
 ---@return number
@@ -184,7 +185,9 @@ end
 
 ---@param y integer
 function NumberBox:on_mouse_wheel(y)
+  if not NumberBox.super.on_mouse_wheel(self, y) then return false end
   if y > 0 then self:increase() else self:decrease() end
+  return true
 end
 
 function NumberBox:update()

@@ -16,6 +16,7 @@ local ButtonIcon = {}
 ---@class widget.button : widget
 ---@field public padding widget.position
 ---@field public icon widget.button.icon
+---@field public expanded boolean
 local Button = Widget:extend()
 
 function Button:new(parent, label)
@@ -30,7 +31,19 @@ function Button:new(parent, label)
     y = style.padding.y
   }
 
+  self.expanded = false
+
   self:set_label(label or "")
+end
+
+---When set to true the button width will be the same as parent
+---@param expand? boolean | nil
+function Button:toggle_expand(expand)
+  if type(expand) == "boolean" then
+    self.expanded = expand
+  else
+    self.expanded = not self.expanded
+  end
 end
 
 function Button:set_icon(code, color, hover_color)
@@ -44,7 +57,12 @@ end
 function Button:set_label(text)
   Button.super.set_label(self, text)
 
-  self.size.x = self.font:get_width(self.label) + (self.padding.x * 2)
+  if self.expanded and self.parent then
+    self.size.x = self.parent.size.x - self.position.rx
+  else
+    self.size.x = self.font:get_width(self.label) + (self.padding.x * 2)
+  end
+
   self.size.y = self.font:get_height() + (self.padding.y * 2)
 
   if self.icon.code then

@@ -40,6 +40,7 @@ function SelectBox:new(parent, label)
     if idx ~= 1 then
       self.selected = idx-1
       self:on_selected(idx-1, data)
+      self:on_change(self.selected)
     end
     self.list_container:hide()
   end
@@ -110,6 +111,7 @@ function SelectBox:set_selected(idx)
   else
     self.selected = 0
   end
+  self:on_change(self.selected)
 end
 
 ---Get the currently selected option index.

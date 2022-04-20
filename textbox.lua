@@ -168,6 +168,7 @@ end
 ---@param select boolean
 function TextBox:set_text(text, select)
   self.textview:set_text(text, select)
+  self:on_change(text)
 end
 
 --
@@ -228,6 +229,7 @@ end
 function TextBox:on_text_input(text)
   TextBox.super.on_text_input(self, text)
   self.textview:on_text_input(text)
+  self:on_change(self:get_text())
 end
 
 ---Event fired on any text change event.

@@ -32,11 +32,16 @@ function Toggle:new(parent, label, enable)
     self.caption_label:get_width() + (style.padding.x / 2) + 50,
     self.caption_label:get_height() + (self.padding * 2)
   )
+
+  self.animate_switch = false
+  self.toggle_x = 0
 end
 
 ---@param enabled boolean
 function Toggle:set_toggle(enabled)
   self.enabled = enabled
+  self.animate_switch = true
+  self:on_change(self.enabled)
 end
 
 ---@return boolean
@@ -46,6 +51,8 @@ end
 
 function Toggle:toggle()
   self.enabled = not self.enabled
+  self.animate_switch = true
+  self:on_change(self.enabled)
 end
 
 ---@param text string|widget.styledtext
@@ -75,7 +82,7 @@ function Toggle:update()
     or
     self.position.x + self.toggle_x + 4
 
-  if not self.switch_x then
+  if not self.animate_switch then
     self.switch_x = switch_x
     self.toggle_bg = {}
     local color = self.enabled and style.caret or style.dim
@@ -85,6 +92,9 @@ function Toggle:update()
     self:move_towards(self, "switch_x", switch_x, 0.2)
     for i=1, 4, 1 do
       self:move_towards(self.toggle_bg, i, color[i], 0.2)
+    end
+    if self.switch_x == switch_x then
+      self.animate_switch = false
     end
   end
 

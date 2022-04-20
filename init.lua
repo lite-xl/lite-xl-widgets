@@ -50,6 +50,7 @@ local WidgetPosition = {}
 ---@field public border widget.border
 ---@field public clickable boolean
 ---@field public draggable boolean
+---@fie;d public scrollable boolean
 ---@field public font renderer.font
 ---@field public foreground_color renderer.color
 ---@field public background_color renderer.color
@@ -225,6 +226,17 @@ function Widget:add_child(child)
   table.sort(self.childs, function(t1, t2) return t1.zindex > t2.zindex end)
 
   self.next_zindex = self.next_zindex + 1
+end
+
+---Remove a child widget.
+---@param child widget
+function Widget:remove_child(child)
+  for position, element in ipairs(self.childs) do
+    if child == element then
+      table.remove(self.childs, position)
+      break
+    end
+  end
 end
 
 ---Show the widget.
@@ -602,7 +614,9 @@ end
 function Widget:get_scrollable_size()
   local bottom_position = self.size.y
   for _, child in pairs(self.childs) do
-    bottom_position = math.max(bottom_position, child:get_bottom())
+    if child.visible then
+      bottom_position = math.max(bottom_position, child:get_bottom())
+    end
   end
   return bottom_position
 end
@@ -775,6 +789,11 @@ function Widget:on_mouse_released(button, x, y)
   return true
 end
 
+---Event emitted when the value of the widget changes.
+---If applicable, child widgets should call this method
+---when its value changes.
+function Widget:on_change(value) end
+
 ---Click event emitted on a succesful on_mouse_pressed
 ---and on_mouse_released events combo.
 ---@param button widget.clicktype
@@ -936,23 +955,23 @@ function Widget:update()
   -- call this to be able to properly scroll
   self:update_position()
 
-  if
-    #self.childs > 0
-    and
-    (
-      self.position.x ~= self.prev_position.x
-      or
-      self.position.y ~= self.prev_position.y
-    )
-  then
-    self:set_position(self.position.x, self.position.y)
-  end
-
   for _, child in pairs(self.childs) do
     child:update()
   end
 
   return true
+end
+
+function Widget:draw_scrollbar()
+  if self.scrollable then
+    Widget.super.draw_scrollbar(self)
+  end
+
+  for i=#self.childs, 1, -1 do
+    if self.childs[i].visible and self.childs[i].scrollable then
+      self.childs[i]:draw_scrollbar()
+    end
+  end
 end
 
 ---If visible draw the widget and returns true.
@@ -989,9 +1008,7 @@ function Widget:draw()
     core.pop_clip_rect()
   end
 
-  if self.scrollable then
-    self:draw_scrollbar()
-  end
+  self:draw_scrollbar()
 
   return true
 end

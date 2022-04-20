@@ -270,9 +270,7 @@ function MessageBox:draw()
     core.pop_clip_rect()
   end
 
-  if self.scrollable then
-    self:draw_scrollbar()
-  end
+  self:draw_scrollbar()
 
   return true
 end
@@ -341,4 +339,3 @@ end
 
 
 return MessageBox
-

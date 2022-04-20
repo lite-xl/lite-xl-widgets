@@ -29,6 +29,7 @@ end
 ---@param checked boolean
 function CheckBox:set_checked(checked)
   self.checked = checked
+  self:on_change(self.checked)
 end
 
 ---@return boolean
@@ -51,6 +52,7 @@ end
 function CheckBox:on_click()
   self.checked = not self.checked
   self:on_checked(self.checked)
+  self:on_change(self.checked)
 end
 
 function CheckBox:on_checked(checked) end
