@@ -151,7 +151,7 @@ function FoldingBook:update()
     cy = pane.tab:get_bottom() + 4
     cw = self:get_width() - (pane.container.border.width * 2)
     if #pane.container.childs > 0 then
-      ch = pane.container:get_scrollable_size()
+      ch = pane.container:get_real_height() + 10
     end
 
     pane.container.border.color = style.divider
