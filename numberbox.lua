@@ -45,6 +45,7 @@ function NumberBox:new(parent, value, min, max, step)
     else
       this.textbox.placeholder_active = false
       this.current_text = this.textbox:get_text()
+      this:on_change(tonumber(this.current_text))
     end
   end
   function self.decrease_button:on_mouse_pressed(button, x, y, clicks)
