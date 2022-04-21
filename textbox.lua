@@ -128,8 +128,13 @@ function TextBox:new(parent, text, placeholder)
     self.textview:set_text(self.placeholder)
   end
 
-  -- more granular listening of text changing events
   local this = self
+
+  function self.textview.doc:on_text_change(type)
+    this:on_change(this:get_text())
+  end
+
+  -- more granular listening of text changing events
   local doc_raw_insert = self.textview.doc.raw_insert
   function self.textview.doc:raw_insert(...)
     doc_raw_insert(self, ...)
