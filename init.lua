@@ -78,12 +78,17 @@ Widget.NEWLINE = 1
 ---When no parent is given to the widget constructor it will automatically
 ---overwrite RootView methods to intercept system events.
 ---@param parent widget
-function Widget:new(parent)
+---@param floating? boolean | nil
+function Widget:new(parent, floating)
   Widget.super.new(self)
 
   self.parent = parent
   self.name = "---" -- defaults to the application name
-  self.defer_draw = true
+  if type(floating) == "boolean" then
+    self.defer_draw =  floating
+  else
+    self.defer_draw = true
+  end
   self.childs = {}
   self.child_active = nil
   self.zindex = nil
@@ -118,7 +123,7 @@ function Widget:new(parent)
 
   if parent then
     parent:add_child(self)
-  else
+  elseif self.defer_draw then
     local this = self
     local mouse_pressed_outside = false -- used to allow proper node resizing
     local root_view_on_mouse_pressed = RootView.on_mouse_pressed
@@ -519,6 +524,30 @@ function Widget:get_bottom()
   return self:get_position().y + self:get_height()
 end
 
+---Overall height of the widget accounting all visible child widgets.
+---@return number
+function Widget:get_real_height()
+  local size = 0
+  for _, child in pairs(self.childs) do
+    if child.visible then
+      size = math.max(size, child:get_bottom())
+    end
+  end
+  return size
+end
+
+---Overall width of the widget accounting all visible child widgets.
+---@return number
+function Widget:get_real_width()
+  local size = 0
+  for _, child in pairs(self.childs) do
+    if child.visible then
+      size = math.max(size, child:get_right())
+    end
+  end
+  return size
+end
+
 ---Check if the given mouse coordinate is hovering the widget
 ---@param x number
 ---@param y number
@@ -609,16 +638,11 @@ function Widget:swap_active_child(child)
   end
 end
 
----Calculates the scrollable size based on the bottom most widget.
+---Calculates the scrollable size taking into account the bottom most
+---widget or the size of the widget it self if greater.
 ---@return number
 function Widget:get_scrollable_size()
-  local bottom_position = self.size.y
-  for _, child in pairs(self.childs) do
-    if child.visible then
-      bottom_position = math.max(bottom_position, child:get_bottom())
-    end
-  end
-  return bottom_position
+  return math.max(self.size.y, self:get_real_height())
 end
 
 ---The name that is displayed on lite-xl tabs.
