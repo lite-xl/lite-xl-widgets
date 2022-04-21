@@ -8,7 +8,7 @@ local style = require "core.style"
 local Widget = require "widget"
 local Button = require "widget.button"
 
----Represents a notebook pane
+---Represents a foldingbook pane
 ---@class widget.foldingbook.pane
 ---@field public name string
 ---@field public tab widget.button
@@ -20,7 +20,7 @@ local FoldingBookPane = {}
 ---@field public panes widget.foldingbook.pane[]
 local FoldingBook = Widget:extend()
 
----Notebook constructor
+---FoldingBook constructor
 ---@param parent widget
 function FoldingBook:new(parent)
   FoldingBook.super.new(self, parent)
@@ -126,8 +126,7 @@ function FoldingBook:set_pane_icon(name, icon, color, hover_color)
   return false
 end
 
----Recalculate the position of the elements on resizing or position
----changes and also make changes to properly render active pane.
+---Recalculate the position of the elements on resizing or position changes.
 function FoldingBook:update()
   if not FoldingBook.super.update(self) then return false end
 
