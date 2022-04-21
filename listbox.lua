@@ -87,7 +87,7 @@ function ListBox:add_row(row, data)
   table.insert(self.rows, row)
   table.insert(self.positions, self:get_col_positions(row))
 
-  if data then
+  if type(data) ~= "nil" then
     self.row_data[#self.rows] = data
   end
 
@@ -331,7 +331,7 @@ end
 ---@param idx integer
 ---@return any|nil
 function ListBox:get_row_data(idx)
-  if self.row_data[idx] then
+  if type(self.row_data[idx]) ~= "nil" then
     return self.row_data[idx]
   end
   return nil
