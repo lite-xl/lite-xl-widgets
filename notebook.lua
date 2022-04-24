@@ -137,9 +137,11 @@ function NoteBook:update()
       pane.tab:set_position(0, 0)
     end
     if pane ~= self.active_pane then
-      pane.tab.background_color = style.background
-      pane.tab.foreground_color = style.text
-      pane.container:hide()
+      if pane.container.visible then
+        pane.tab.background_color = style.background
+        pane.tab.foreground_color = style.text
+        pane.container:hide()
+      end
     elseif not pane.container.visible then
       pane.container:show()
     end

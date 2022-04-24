@@ -159,9 +159,11 @@ function FoldingBook:update()
     if pane.expanded then
       pane.container:set_position(cx, cy)
       pane.container:set_size(cw, ch)
-      pane.container:show()
-      pane.tab:set_icon("-")
-    else
+      if not pane.container.visible then
+        pane.container:show()
+        pane.tab:set_icon("-")
+      end
+    elseif pane.container.visible then
       pane.tab:set_icon("+")
       pane.container:hide()
     end
