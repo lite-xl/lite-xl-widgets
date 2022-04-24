@@ -74,6 +74,10 @@ local Widget = View:extend()
 ---@type integer
 Widget.NEWLINE = 1
 
+---Keep track of last hovered widget to properly trigger on_mouse_leave
+---@type widget
+local last_hovered_child
+
 ---
 ---When no parent is given to the widget constructor it will automatically
 ---overwrite RootView methods to intercept system events.
@@ -254,7 +258,7 @@ function Widget:show()
     self.prev_size.x = 0
     self.prev_size.y = 0
   end
-  if not self.visible and self.defer_draw then
+  if not self.visible and self.defer_draw and not self.parent then
     self.visible = true
     core.root_view:draw()
   else
@@ -872,6 +876,11 @@ function Widget:on_mouse_moved(x, y, dx, dy)
 
     if hovered then
       hovered:on_mouse_moved(x, y, dx, dy)
+      if last_hovered_child and not last_hovered_child:mouse_on_top(x, y) then
+        last_hovered_child:on_mouse_leave(x, y, dx, dy)
+        last_hovered_child.mouse_is_hovering = false
+        last_hovered_child = nil
+      end
       return true;
     end
   end
@@ -904,10 +913,11 @@ function Widget:on_mouse_moved(x, y, dx, dy)
         core.status_view:show_tooltip(self.tooltip)
       end
       self:on_mouse_enter(x, y, dx, dy)
+      last_hovered_child = self
     end
   else
-    self.mouse_is_hovering = false
     self:on_mouse_leave(x, y, dx, dy)
+    self.mouse_is_hovering = false
     is_over = false
   end
 
@@ -933,9 +943,8 @@ end
 ---Emitted once when the mouse leaves the widget.
 function Widget:on_mouse_leave(x, y, dx, dy)
   for _, child in pairs(self.childs) do
-    if child:mouse_on_top(x, y) then
+    if child.mouse_is_hovering then
       child:on_mouse_leave(x, y, dx, dy)
-      break
     end
   end
 end
