@@ -254,7 +254,12 @@ function Widget:show()
     self.prev_size.x = 0
     self.prev_size.y = 0
   end
-  self.visible = true
+  if not self.visible and self.defer_draw then
+    self.visible = true
+    core.root_view:draw()
+  else
+    self.visible = true
+  end
 end
 
 ---Hide the widget.
