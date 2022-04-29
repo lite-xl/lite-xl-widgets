@@ -54,6 +54,7 @@ local WidgetPosition = {}
 ---@field public font renderer.font
 ---@field public foreground_color renderer.color
 ---@field public background_color renderer.color
+---@field public render_background boolean
 ---@field private visible boolean
 ---@field private has_focus boolean
 ---@field private dragged boolean
@@ -103,6 +104,7 @@ function Widget:new(parent, floating)
   }
   self.foreground_color = nil
   self.background_color = nil
+  self.render_background = true
   self.visible = parent and true or false
   self.has_focus = false
   self.clickable = true
@@ -288,6 +290,16 @@ function Widget:hide()
       self.size.x = 0
       self.size.y = 0
     end
+  end
+end
+
+---When set to false the background rendering is disabled.
+---@param enable? boolean | nil
+function Widget:toggle_background(enable)
+  if type(enable) == "boolean" then
+    self.render_background = enable
+  else
+    self.render_background = not self.render_background
   end
 end
 
@@ -1027,12 +1039,14 @@ function Widget:draw()
 
   self:draw_border()
 
-  if self.background_color then
-    self:draw_background(self.background_color)
-  else
-    self:draw_background(
-      self.parent and style.background or style.background2
-    )
+  if self.render_background then
+    if self.background_color then
+      self:draw_background(self.background_color)
+    else
+      self:draw_background(
+        self.parent and style.background or style.background2
+      )
+    end
   end
 
   if #self.childs > 0 then
