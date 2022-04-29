@@ -260,7 +260,13 @@ function Widget:show()
   end
   if not self.visible and self.defer_draw and not self.parent then
     self.visible = true
-    core.root_view:draw()
+    if core.frame_start > 0 then
+      core.root_view:draw()
+    else
+      core.add_thread(function()
+        core.root_view:draw()
+      end)
+    end
   else
     self.visible = true
   end
