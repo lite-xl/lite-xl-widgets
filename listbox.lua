@@ -327,6 +327,27 @@ function ListBox:remove_row(ridx)
   end
 end
 
+---Change the content assigned to a row.
+---@param idx integer
+---@param row widget.listbox.row
+function ListBox:set_row(idx, row)
+  --TODO: recalculate subsequent row sizes and max col width if needed
+  if self.rows[idx] then
+    self.rows[idx] = row
+    -- precalculate the row size and position
+    self:calc_row_size_pos(idx)
+  end
+end
+
+---Change the data assigned to a row.
+---@param idx integer
+---@param data any|nil
+function ListBox:set_row_data(idx, data)
+  if self.rows[idx] then
+    self.row_data[idx] = data
+  end
+end
+
 ---Get the data associated with a row.
 ---@param idx integer
 ---@return any|nil
