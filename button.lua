@@ -67,7 +67,10 @@ function Button:set_label(text)
 
   if self.icon.code then
     local icon_w = style.icon_font:get_width(self.icon.code)
-      + (self.padding.x / 2)
+
+    if self.label ~= "" then
+      icon_w = icon_w + (self.padding.x / 2)
+    end
 
     local icon_h = style.icon_font:get_height() + (self.padding.y * 2)
 
@@ -118,13 +121,15 @@ function Button:draw()
     offsetx = offsetx + style.icon_font:get_width(self.icon.code) + (style.padding.x / 2)
   end
 
-  renderer.draw_text(
-    self.font,
-    self.label,
-    offsetx,
-    offsety,
-    self.hover_text or self.foreground_color or style.text
-  )
+  if self.label ~= "" then
+    renderer.draw_text(
+      self.font,
+      self.label,
+      offsetx,
+      offsety,
+      self.hover_text or self.foreground_color or style.text
+    )
+  end
 
   return true
 end
