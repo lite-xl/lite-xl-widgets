@@ -26,6 +26,7 @@ local ListBoxColumn = {}
 ---@field private positions widget.listbox.colpos[]
 ---@field private mouse widget.position
 ---@field private selected_row integer
+---@field private hovered_row integer
 ---@field private largest_row integer
 ---@field private expand boolean
 ---@field private visible_rows table<integer, integer>
@@ -54,6 +55,7 @@ function ListBox:new(parent)
   self.columns = {}
   self.positions = {}
   self.selected_row = 0
+  self.hovered_row = 0
   self.largest_row = 0
   self.expand = false
   self.visible_rows = {}
@@ -420,6 +422,7 @@ function ListBox:clear()
   self.row_data = {}
   self.positions = {}
   self.selected_row = 0
+  self.hovered_row = 0
 
   for cidx, col in ipairs(self.columns) do
     col.width = self:get_col_width(cidx)
@@ -547,6 +550,11 @@ function ListBox:draw_row(row, x, y, only_calc)
   if not only_calc and self.rows[row].w then
     w, h = self.rows[row].w, self.rows[row].h
     w = self.largest_row > 0 and self.largest_row or w
+
+    if self.selected_row == row then
+      renderer.draw_rect(x, y, w, h, style.background2)
+    end
+
     local mouse = self.mouse
     if
       mouse.x >= x
@@ -558,7 +566,7 @@ function ListBox:draw_row(row, x, y, only_calc)
       mouse.y <= y + h
     then
       renderer.draw_rect(x, y, w, h, style.selection)
-      self.selected_row = row
+      self.hovered_row = row
     end
     w, h = 0, 0
   end
@@ -619,17 +627,18 @@ end
 
 function ListBox:on_mouse_leave(x, y, dx, dy)
   ListBox.super.on_mouse_leave(self, x, y, dx, dy)
-  self.selected_row = 0
+  self.hovered_row = 0
 end
 
 function ListBox:on_mouse_moved(x, y, dx, dy)
   ListBox.super.on_mouse_moved(self, x, y, dx, dy)
-  self.selected_row = 0
+  self.hovered_row = 0
 end
 
 function ListBox:on_click(button, x, y)
-  if button == "left" and self.selected_row > 0 then
-    self:on_row_click(self.selected_row, self.row_data[self.selected_row])
+  if button == "left" and self.hovered_row > 0 then
+    self.selected_row = self.hovered_row
+    self:on_row_click(self.hovered_row, self.row_data[self.hovered_row])
   end
 end
 
