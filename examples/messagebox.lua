@@ -44,3 +44,8 @@ MessageBox.info(
   end,
   MessageBox.BUTTONS_YES_NO_CANCEL
 )
+
+function messagebox:on_close(button_id, button)
+  MessageBox.on_close(self, button_id, button)
+  self:destroy()
+end
