@@ -329,6 +329,21 @@ function ListBox:remove_row(ridx)
   end
 end
 
+---Set the row that is currently active/selected.
+---@param idx? integer
+function ListBox:set_selected(idx)
+  self.selected_row = idx or 0
+end
+
+---Get the row that is currently active/selected.
+---@return integer | nil
+function ListBox:get_selected()
+  if self.selected_row > 0 then
+    return self.selected_row
+  end
+  return nil
+end
+
 ---Change the content assigned to a row.
 ---@param idx integer
 ---@param row widget.listbox.row
