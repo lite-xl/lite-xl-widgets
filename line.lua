@@ -11,12 +11,18 @@ local Widget = require "widget"
 ---@field public padding integer
 local Line = Widget:extend()
 
+---Constructor
+---@param parent widget
+---@param thickness integer
+---@param padding number
 function Line:new(parent, thickness, padding)
   Line.super.new(self, parent)
   self.size.y = thickness or 2
   self.padding = padding or (style.padding.x / 2)
 end
 
+---Set the thickness of the line
+---@param thickness number
 function Line:set_thickness(thickness)
   self.size.y  = thickness or 2
 end

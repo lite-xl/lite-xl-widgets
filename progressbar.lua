@@ -15,6 +15,10 @@ local Widget = require "widget"
 ---@field private percent_y number
 local ProgressBar = Widget:extend()
 
+---Constructor
+---@param parent widget
+---@param percent number
+---@param width number
 function ProgressBar:new(parent, percent, width)
   ProgressBar.super.new(self, parent)
   self.clickable = false

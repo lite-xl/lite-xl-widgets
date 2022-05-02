@@ -10,6 +10,9 @@ local Widget = require "widget"
 ---@class widget.label : widget
 local Label = Widget:extend()
 
+---Constructor
+---@param parent widget
+---@param label string
 function Label:new(parent, label)
   Label.super.new(self, parent)
   self.clickable = false
@@ -17,6 +20,7 @@ function Label:new(parent, label)
   self:set_label(label or "")
 end
 
+---Set the label text and recalculates the widget size.
 ---@param text string|widget.styledtext
 function Label:set_label(text)
   Label.super.set_label(self, text)

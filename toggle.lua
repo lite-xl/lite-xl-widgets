@@ -16,6 +16,10 @@ local Label = require "widget.label"
 ---@field private toggle_bg renderer.color
 local Toggle = Widget:extend()
 
+---Constructor
+---@param parent widget
+---@param label string
+---@param enable boolean
 function Toggle:new(parent, label, enable)
   Toggle.super.new(self, parent)
 

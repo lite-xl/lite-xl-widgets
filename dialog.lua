@@ -12,9 +12,8 @@ local Label = require "widget.label"
 
 ---@class widget.dialog : widget
 ---@field private title widget.label
+---@field private close widget.button
 ---@field private panel widget
----@field private message widget.label
----@field private buttons widget.button[]
 local Dialog = Widget:extend()
 
 ---Constructor
@@ -56,20 +55,20 @@ function Dialog:get_panel()
   return self.panel
 end
 
----Change the message box title.
+---Change the dialog title.
 ---@param text string|widget.styledtext
 function Dialog:set_title(text)
   self.title:set_label(text)
 end
 
----Calculate the MessageBox size, centers it relative to screen and shows it.
+---Calculate the dialog size, centers it relative to screen and shows it.
 function Dialog:show()
   Dialog.super.show(self)
   self:update()
   self:centered()
 end
 
----Called when the user clicks one of the buttons in the message box.
+---Called when the user clicks the close button of the dialog.
 function Dialog:on_close()
   self:hide()
 end

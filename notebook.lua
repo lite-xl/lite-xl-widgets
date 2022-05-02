@@ -28,10 +28,9 @@ function NoteBook:new(parent)
   self.active_pane = nil
 end
 
+---Called when a tab is clicked.
 ---@param pane widget.notebook.pane
-function NoteBook:on_tab_click(pane)
-  self.active_pane = pane
-end
+function NoteBook:on_tab_click(pane) end
 
 ---Adds a new pane to the notebook and returns a container widget where
 ---you can add more child elements.
@@ -66,6 +65,7 @@ function NoteBook:add_pane(name, label)
   end
 
   tab.on_click = function()
+    self.active_pane = pane
     self:on_tab_click(pane)
   end
 
@@ -74,8 +74,9 @@ function NoteBook:add_pane(name, label)
   return container
 end
 
+---Search the pane for the given name and return it.
 ---@param name string
----@return widget.notebook.pane
+---@return widget.notebook.pane | nil
 function NoteBook:get_pane(name)
   for pos, pane in pairs(self.panes) do
     if pane.name == name then
@@ -85,7 +86,7 @@ function NoteBook:get_pane(name)
   return nil
 end
 
----Activates the given pane
+---Activates the given pane.
 ---@param name string
 ---@return boolean
 function NoteBook:set_pane(name)

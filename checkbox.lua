@@ -11,12 +11,17 @@ local Widget = require "widget"
 ---@field private checked boolean
 local CheckBox = Widget:extend()
 
+---Constructor
+---@param parent widget
+---@param label string
 function CheckBox:new(parent, label)
   CheckBox.super.new(self, parent)
   self.checked = false
   self:set_label(label or "")
 end
 
+---Set the checkbox label and recalculates the widget size.
+---@param text string
 function CheckBox:set_label(text)
   CheckBox.super.set_label(self, text)
 
@@ -26,16 +31,22 @@ function CheckBox:set_label(text)
   self.size.y = self.font:get_height()
 end
 
+---Change the status of the checkbox.
 ---@param checked boolean
 function CheckBox:set_checked(checked)
   self.checked = checked
   self:on_change(self.checked)
 end
 
+---Get the status of the checkbox.
 ---@return boolean
 function CheckBox:is_checked()
   return self.checked
 end
+
+---Called when the checkbox is (un)checked.
+---@param checked boolean
+function CheckBox:on_checked(checked) end
 
 function CheckBox:on_mouse_enter(...)
   CheckBox.super.on_mouse_enter(self, ...)
@@ -54,8 +65,6 @@ function CheckBox:on_click()
   self:on_checked(self.checked)
   self:on_change(self.checked)
 end
-
-function CheckBox:on_checked(checked) end
 
 function CheckBox:get_box_rect()
   local size = 1.6
@@ -105,4 +114,3 @@ end
 
 
 return CheckBox
-

@@ -19,6 +19,9 @@ local ButtonIcon = {}
 ---@field public expanded boolean
 local Button = Widget:extend()
 
+---Constructor
+---@param parent widget
+---@param label string
 function Button:new(parent, label)
   Button.super.new(self, parent)
 
@@ -46,6 +49,10 @@ function Button:toggle_expand(expand)
   end
 end
 
+---Set the icon drawn alongside the button text.
+---@param code string
+---@param color? renderer.color
+---@param hover_color? renderer.color
 function Button:set_icon(code, color, hover_color)
   self.icon.code = code
   self.icon.color = color
@@ -54,6 +61,8 @@ function Button:set_icon(code, color, hover_color)
   self:set_label(self.label)
 end
 
+---Set the button text and recalculates the widget size.
+---@param text string
 function Button:set_label(text)
   Button.super.set_label(self, text)
 

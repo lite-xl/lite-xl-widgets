@@ -18,6 +18,12 @@ local TextBox = require "widget.textbox"
 ---@field private step number
 local NumberBox = Widget:extend()
 
+---Constructor
+---@param parent widget
+---@param value number
+---@param min number
+---@param max number
+---@param step number
 function NumberBox:new(parent, value, min, max, step)
   NumberBox.super.new(self, parent)
 
@@ -88,6 +94,7 @@ function NumberBox:new(parent, value, min, max, step)
   )
 end
 
+---Set a new value.
 ---@param value number
 function NumberBox:set_value(value)
   if type(value) == "number" then
@@ -102,6 +109,7 @@ function NumberBox:set_value(value)
   self:on_change(tonumber(self.current_text))
 end
 
+---Get the current value.
 ---@return number
 function NumberBox:get_value()
   return tonumber(self.textbox:get_text()) or self.minimum
@@ -164,6 +172,7 @@ function NumberBox:mouse_pressed(increase)
   end)
 end
 
+---Overrided to enforce minimum allowed size.
 ---@param width integer
 ---@param height integer Ignored on the number box
 function NumberBox:set_size(width, height)
@@ -184,6 +193,7 @@ function NumberBox:set_size(width, height)
   )
 end
 
+---Increase or decrease the value on mouse wheel.
 ---@param y integer
 function NumberBox:on_mouse_wheel(y)
   if not NumberBox.super.on_mouse_wheel(self, y) then return false end
