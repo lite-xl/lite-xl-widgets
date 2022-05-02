@@ -286,9 +286,7 @@ function MessageBox.alert(title, message, icon, icon_color, on_close, buttons)
   buttons = buttons or MessageBox.BUTTONS_OK
   ---@type widget.messagebox
   local msgbox = MessageBox(nil, title, message, icon, icon_color)
-  if buttons == MessageBox.BUTTONS_OK then
-    msgbox:add_button("Ok")
-  elseif buttons == MessageBox.BUTTONS_OK_CANCEL then
+  if buttons == MessageBox.BUTTONS_OK_CANCEL then
     msgbox:add_button("Ok")
     msgbox:add_button("Cancel")
   elseif buttons == MessageBox.BUTTONS_YES_NO then
@@ -298,6 +296,8 @@ function MessageBox.alert(title, message, icon, icon_color, on_close, buttons)
     msgbox:add_button("Yes")
     msgbox:add_button("No")
     msgbox:add_button("Cancel")
+  else
+    msgbox:add_button("Ok")
   end
 
   local msgbox_on_close = msgbox.on_close
@@ -314,8 +314,8 @@ end
 ---Wrapper to easily show a info message box.
 ---@param title string
 ---@param message string
----@param on_close widget.messagebox.onclosehandler
----@param buttons widget.messagebox.buttonstype
+---@param on_close? widget.messagebox.onclosehandler
+---@param buttons? widget.messagebox.buttonstype
 function MessageBox.info(title, message, on_close, buttons)
   MessageBox.alert(title, message, MessageBox.ICON_INFO, nil, on_close, buttons)
 end
@@ -323,8 +323,8 @@ end
 ---Wrapper to easily show a warning message box.
 ---@param title string
 ---@param message string
----@param on_close widget.messagebox.onclosehandler
----@param buttons widget.messagebox.buttonstype
+---@param on_close? widget.messagebox.onclosehandler
+---@param buttons? widget.messagebox.buttonstype
 function MessageBox.warning(title, message, on_close, buttons)
   MessageBox.alert(title, message, MessageBox.ICON_WARNING, nil, on_close, buttons)
 end
@@ -332,8 +332,8 @@ end
 ---Wrapper to easily show an error message box.
 ---@param title string
 ---@param message string
----@param on_close widget.messagebox.onclosehandler
----@param buttons widget.messagebox.buttonstype
+---@param on_close? widget.messagebox.onclosehandler
+---@param buttons? widget.messagebox.buttonstype
 function MessageBox.error(title, message, on_close, buttons)
   MessageBox.alert(title, message, MessageBox.ICON_ERROR, nil, on_close, buttons)
 end
