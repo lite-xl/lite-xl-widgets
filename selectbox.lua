@@ -108,8 +108,10 @@ end
 function SelectBox:set_selected(idx)
   if self.list.rows[idx+1] then
     self.selected = idx
+    self.list:set_selected(idx+1)
   else
     self.selected = 0
+    self.list:set_selected()
   end
   self:on_change(self.selected)
 end
@@ -159,6 +161,12 @@ function SelectBox:reposition_container()
   end
 
   self.list_container.size.x = self.size.x
+end
+
+---Overrided to destroy the floating listbox container.
+function SelectBox:destroy()
+  SelectBox.super.destroy(self)
+  self.list_container:destroy()
 end
 
 --
