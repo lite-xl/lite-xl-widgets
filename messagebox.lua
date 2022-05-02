@@ -299,13 +299,14 @@ function MessageBox.alert(title, message, icon, icon_color, on_close, buttons)
     msgbox:add_button("No")
     msgbox:add_button("Cancel")
   end
-  if on_close then
-    local msgbox_on_close = msgbox.on_close
-    msgbox.on_close = function(self, button_id, button)
+
+  local msgbox_on_close = msgbox.on_close
+  msgbox.on_close = function(self, button_id, button)
+    if on_close then
       on_close(self, button_id, button)
-      msgbox_on_close(self, button_id, button)
-      self = nil
     end
+    msgbox_on_close(self, button_id, button)
+    self:destroy()
   end
   msgbox:show()
 end
