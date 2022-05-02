@@ -11,14 +11,12 @@ local style = require "core.style"
 local View = require "core.view"
 local RootView = require "core.rootview"
 
----
 ---Represents the border of a widget.
 ---@class widget.border
 ---@field public width number
 ---@field public color renderer.color
 local WidgetBorder = {}
 
----
 ---Represents the position of a widget.
 ---@class widget.position
 ---@field public x number Real X
@@ -29,14 +27,12 @@ local WidgetBorder = {}
 ---@field public dy number Dragging initial y position
 local WidgetPosition = {}
 
----
 ---@alias widget.clicktype
 ---|>'"left"'
 ---| '"right"'
 
 ---@alias widget.styledtext table<integer, renderer.font|renderer.color|integer|string>
 
----
 ---A base widget
 ---@class widget @global
 ---@field public super widget
@@ -68,6 +64,7 @@ local WidgetPosition = {}
 ---@field private prev_size widget.position
 ---@field private mouse_is_pressed boolean
 ---@field private mouse_is_hovering boolean
+---@field private mouse_pressed_outside boolean
 ---@field private was_scrolling boolean
 local Widget = View:extend()
 
@@ -77,9 +74,12 @@ Widget.NEWLINE = 1
 
 ---Keep track of last hovered widget to properly trigger on_mouse_leave
 ---@type widget
-local last_hovered_child
+local last_hovered_child = nil
 
----
+---A list of floating widgets that need to receive events.
+---@type table<integer, widget>
+local floating_widgets = {}
+
 ---When no parent is given to the widget constructor it will automatically
 ---overwrite RootView methods to intercept system events.
 ---@param parent widget
@@ -123,6 +123,9 @@ function Widget:new(parent, floating)
   self.mouse_is_pressed = false
   self.mouse_is_hovering = false
 
+  -- used to allow proper node resizing
+  self.mouse_pressed_outside = false
+
   self.current_scale = SCALE
 
   self:set_position(0, 0)
@@ -130,98 +133,8 @@ function Widget:new(parent, floating)
   if parent then
     parent:add_child(self)
   elseif self.defer_draw then
-    local this = self
-    local mouse_pressed_outside = false -- used to allow proper node resizing
-    local root_view_on_mouse_pressed = RootView.on_mouse_pressed
-    local root_view_on_mouse_released = RootView.on_mouse_released
-    local root_view_on_mouse_moved = RootView.on_mouse_moved
-    local root_view_on_mouse_wheel = RootView.on_mouse_wheel
-    local root_view_update = RootView.update
-    local root_view_draw = RootView.draw
-    local root_view_on_file_dropped = RootView.on_file_dropped
-    local root_view_on_text_input = RootView.on_text_input
-
-    function RootView:on_mouse_pressed(button, x, y, clicks)
-      mouse_pressed_outside = not this:mouse_on_top(x, y)
-      if
-        (not this.defer_draw and not this.child_active)
-        or
-        mouse_pressed_outside or not this:on_mouse_pressed(button, x, y, clicks)
-      then
-        this:swap_active_child()
-        return root_view_on_mouse_pressed(self, button, x, y, clicks)
-      else
-        return true
-      end
-    end
-
-    function RootView:on_mouse_released(button, x, y)
-      if
-        (not this.defer_draw and not this.child_active)
-        or
-        mouse_pressed_outside or not this:on_mouse_released(button, x, y)
-      then
-        root_view_on_mouse_released(self, button, x, y)
-        mouse_pressed_outside = false
-      end
-    end
-
-    function RootView:on_mouse_moved(x, y, dx, dy)
-      if
-        (not this.defer_draw and not this.child_active)
-        or
-        mouse_pressed_outside or not this:on_mouse_moved(x, y, dx, dy)
-      then
-          if not this.child_active and this.outside_view then
-            core.set_active_view(this.outside_view)
-            this.outside_view = nil
-          end
-          root_view_on_mouse_moved(self, x, y, dx, dy)
-      else
-        if not this.child_active and this.defer_draw then
-          if not this.outside_view then
-            this.outside_view = core.active_view
-          end
-          core.set_active_view(this)
-        end
-      end
-    end
-
-    function RootView:on_mouse_wheel(y)
-      if not this.defer_draw or not this:on_mouse_wheel(y) then
-        return root_view_on_mouse_wheel(self, y)
-      else
-        return true
-      end
-    end
-
-    function RootView:on_file_dropped(filename, x, y)
-      if not this.defer_draw or not this:on_file_dropped(filename, x, y) then
-        return root_view_on_file_dropped(self, filename, x, y)
-      else
-        return true
-      end
-    end
-
-    function RootView:on_text_input(text)
-      if not this.defer_draw or not this:on_text_input(text) then
-        root_view_on_text_input(self, text)
-      end
-    end
-
-    function RootView:update()
-      root_view_update(self)
-      if this.defer_draw then
-        this:update()
-      end
-    end
-
-    function RootView:draw()
-      root_view_draw(self)
-      if this.visible and this.defer_draw then
-        core.root_view:defer_draw(this.draw, this)
-      end
-    end
+    table.insert(floating_widgets, self)
+    Widget.override_rootview()
   end
 end
 
@@ -244,6 +157,7 @@ end
 function Widget:remove_child(child)
   for position, element in ipairs(self.childs) do
     if child == element then
+      child:destroy_childs()
       table.remove(self.childs, position)
       break
     end
@@ -260,18 +174,7 @@ function Widget:show()
     self.prev_size.x = 0
     self.prev_size.y = 0
   end
-  if not self.visible and self.defer_draw and not self.parent then
-    self.visible = true
-    if core.frame_start > 0 then
-      core.root_view:draw()
-    else
-      core.add_thread(function()
-        core.root_view:draw()
-      end)
-    end
-  else
-    self.visible = true
-  end
+  self.visible = true
 end
 
 ---Hide the widget.
@@ -431,12 +334,12 @@ function Widget:draw_border(x, y, w, h)
 
   --top
   renderer.draw_rect(
-    x, y, w + x % 1, self.border.width,
+    x, y, w + x % 1 - self.border.width, self.border.width,
     self.border.color or style.text
   )
   --bottom
   renderer.draw_rect(
-    x, y+h - self.border.width, w + x % 1, self.border.width,
+    x, y+h - self.border.width, w + x % 1 - self.border.width, self.border.width,
     self.border.color or style.text
   )
   --right
@@ -1069,6 +972,178 @@ function Widget:draw()
   self:draw_scrollbar()
 
   return true
+end
+
+---Recursively destroy all childs from the widget.
+function Widget:destroy_childs()
+  ::remove_child::
+  for idx, child in ipairs(self.childs) do
+    child:destroy_childs()
+    table.remove(self.childs, idx)
+    goto remove_child
+  end
+end
+
+---If floating, remove the widget from the floating widgets list
+---to allow proper garbage collection.
+function Widget:destroy()
+  if not self.parent or self.defer_draw then
+    for idx, widget in ipairs(floating_widgets) do
+      if widget == self then
+        widget:destroy_childs()
+        floating_widgets[idx] = nil
+        table.remove(floating_widgets, idx)
+        break
+      end
+    end
+  end
+end
+
+---Flag that indicates if the rootview events are already overrided.
+---@type boolean
+local root_overrided = false
+
+---Called when initializing a floating widget to generate RootView overrides,
+---this function will only override the events once.
+function Widget.override_rootview()
+  if root_overrided then return end
+  root_overrided = true
+
+  local root_view_on_mouse_pressed = RootView.on_mouse_pressed
+  local root_view_on_mouse_released = RootView.on_mouse_released
+  local root_view_on_mouse_moved = RootView.on_mouse_moved
+  local root_view_on_mouse_wheel = RootView.on_mouse_wheel
+  local root_view_update = RootView.update
+  local root_view_draw = RootView.draw
+  local root_view_on_file_dropped = RootView.on_file_dropped
+  local root_view_on_text_input = RootView.on_text_input
+
+  function RootView:on_mouse_pressed(button, x, y, clicks)
+    local pressed = false
+    for i=#floating_widgets, 1, -1 do
+      local widget = floating_widgets[i]
+      widget.mouse_pressed_outside = not widget:mouse_on_top(x, y)
+      if
+        (not widget.defer_draw and not widget.child_active)
+        or
+        widget.mouse_pressed_outside
+        or
+        (pressed or not widget:on_mouse_pressed(button, x, y, clicks))
+      then
+        widget:swap_active_child()
+      else
+        pressed = true
+      end
+    end
+    if not pressed then
+      return root_view_on_mouse_pressed(self, button, x, y, clicks)
+    else
+      return true
+    end
+  end
+
+  function RootView:on_mouse_released(button, x, y)
+    local released = false
+    for i=#floating_widgets, 1, -1 do
+      local widget = floating_widgets[i]
+      if
+        (not widget.defer_draw and not widget.child_active)
+        or
+        widget.mouse_pressed_outside
+        or
+        not widget:on_mouse_released(button, x, y)
+      then
+        widget.mouse_pressed_outside = false
+      else
+        released = true
+      end
+    end
+    if not released then
+      root_view_on_mouse_released(self, button, x, y)
+    end
+  end
+
+  function RootView:on_mouse_moved(x, y, dx, dy)
+    local moved  = false
+    for i=#floating_widgets, 1, -1 do
+      local widget = floating_widgets[i]
+      if
+        (not widget.defer_draw and not widget.child_active)
+        or
+        widget.mouse_pressed_outside
+        or
+        (moved or not widget:on_mouse_moved(x, y, dx, dy))
+      then
+          if not widget.child_active and widget.outside_view then
+            core.set_active_view(widget.outside_view)
+            widget.outside_view = nil
+          end
+      elseif not moved then
+        if not widget.child_active and widget.defer_draw then
+          if not widget.outside_view then
+            widget.outside_view = core.active_view
+          end
+          core.set_active_view(widget)
+          moved = true
+        end
+      end
+    end
+    if not moved then
+      root_view_on_mouse_moved(self, x, y, dx, dy)
+    end
+  end
+
+  function RootView:on_mouse_wheel(y)
+    for i=#floating_widgets, 1, -1 do
+      local widget = floating_widgets[i]
+      if widget.defer_draw and widget:on_mouse_wheel(y) then
+        return true
+      end
+    end
+    return root_view_on_mouse_wheel(self, y)
+  end
+
+  function RootView:on_file_dropped(filename, x, y)
+    for i=#floating_widgets, 1, -1 do
+      local widget = floating_widgets[i]
+      if widget.defer_draw and widget:on_file_dropped(filename, x, y) then
+        return true
+      end
+    end
+    return root_view_on_file_dropped(self, filename, x, y)
+  end
+
+  function RootView:on_text_input(text)
+    for i=#floating_widgets, 1, -1 do
+      local widget = floating_widgets[i]
+      if widget.defer_draw and widget:on_text_input(text) then
+        return true
+      end
+    end
+    return root_view_on_text_input(self, text)
+  end
+
+  function RootView:update()
+    root_view_update(self)
+    local count = #floating_widgets
+    for i=1, count, 1 do
+      local widget = floating_widgets[i]
+      if widget.visible and widget.defer_draw then
+        widget:update()
+      end
+    end
+  end
+
+  function RootView:draw()
+    local count = #floating_widgets
+    for i=1, count, 1 do
+      local widget = floating_widgets[i]
+      if widget.visible and widget.defer_draw then
+        core.root_view:defer_draw(widget.draw, widget)
+      end
+    end
+    root_view_draw(self)
+  end
 end
 
 
