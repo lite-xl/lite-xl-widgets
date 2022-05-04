@@ -164,8 +164,8 @@ function SelectBox:reposition_container()
 end
 
 ---Overrided to destroy the floating listbox container.
-function SelectBox:destroy()
-  SelectBox.super.destroy(self)
+function SelectBox:destroy_childs()
+  SelectBox.super.destroy_childs(self)
   self.list_container:destroy()
 end
 
