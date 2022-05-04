@@ -86,6 +86,21 @@ function FoldingBook:get_pane(name)
   return nil
 end
 
+---Delete a pane and all its childs from the folding book.
+---@param name string
+---@return boolean deleted
+function FoldingBook:delete_pane(name)
+  for idx, pane in ipairs(self.panes) do
+    if pane.name == name then
+      self:remove_child(pane.tab)
+      self:remove_child(pane.container)
+      table.remove(self.panes, idx)
+      return true
+    end
+  end
+  return false
+end
+
 ---Activates the given pane
 ---@param name string
 ---@param visible boolean | nil
