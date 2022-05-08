@@ -464,15 +464,20 @@ function ListBox:draw_row_range(row, start_idx, end_idx, x, y, only_calc)
 
   for pos=start_idx, end_idx, 1 do
     local element = row[pos]
-    if type(element) == "userdata" then
+    local ele_type = type(element)
+    if
+      ele_type == "userdata"
+      or
+      (ele_type == "table" and type(element[1]) == "userdata")
+    then
       font = element
-    elseif type(element) == "table" then
+    elseif ele_type == "table" then
       color = element
     elseif element == ListBox.NEWLINE then
       y = y + font:get_height()
       nx = x
       new_line = true
-    elseif type(element) == "string" then
+    elseif ele_type == "string" then
       local rx, ry, w, h = self:draw_text_multiline(
         font, element, nx, y, color, only_calc
       )
