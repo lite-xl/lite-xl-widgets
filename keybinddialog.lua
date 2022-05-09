@@ -16,6 +16,7 @@ local current_dialog = nil
 ---@class widget.keybinddialog : widget.dialog
 ---@field message widget.label
 ---@field binding widget.label
+---@field mouse_intercept widget.label
 ---@field save widget.button
 ---@field reset widget.button
 ---@field cancel widget.button
@@ -28,6 +29,27 @@ function KeybindDialog:new()
   self.message = Label(self.panel, "Press a key combination")
   self.binding = Label(self.panel, "none")
   self.binding.border.width = 1
+
+  self.mouse_intercept = Label(self.panel, "Grab mouse events here")
+  self.mouse_intercept.border.width = 1
+  self.mouse_intercept.clickable = true
+  self.mouse_intercept:set_size(100, 100)
+  function self.mouse_intercept:on_mouse_pressed(button, x, y, clicks)
+    keymap.on_mouse_pressed(button, x, y, clicks)
+    return true
+  end
+  function self.mouse_intercept:on_mouse_wheel(y)
+    keymap.on_mouse_wheel(y)
+    return true
+  end
+  function self.mouse_intercept:on_mouse_enter(...)
+    Label.super.on_mouse_enter(self, ...)
+    self.border.color = style.caret
+  end
+  function self.mouse_intercept:on_mouse_leave(...)
+    Label.super.on_mouse_leave(self, ...)
+    self.border.color = style.text
+  end
 
   local this = self
 
@@ -75,24 +97,30 @@ function KeybindDialog:update()
 
   self.message:set_position(style.padding.x/2, 0)
   self.binding:set_position(style.padding.x/2, self.message:get_bottom() + style.padding.y)
+  self.mouse_intercept:set_position(style.padding.x/2, self.binding:get_bottom() + style.padding.y)
 
   self.save:set_position(
     style.padding.x/2,
-    self.binding:get_bottom() + style.padding.y
+    self.mouse_intercept:get_bottom() + style.padding.y
   )
   self.reset:set_position(
     self.save:get_right() + style.padding.x,
-    self.binding:get_bottom() + style.padding.y
+    self.mouse_intercept:get_bottom() + style.padding.y
   )
   self.cancel:set_position(
     self.reset:get_right() + style.padding.x,
-    self.binding:get_bottom() + style.padding.y
+    self.mouse_intercept:get_bottom() + style.padding.y
   )
 
   self.panel.size.x = self.panel:get_real_width() + style.padding.x
   self.panel.size.y = self.panel:get_real_height()
-  self.size.x = self:get_real_width()
+  self.size.x = self:get_real_width() - (style.padding.x / 2)
   self.size.y = self:get_real_height() + (style.padding.y / 2)
+
+  self.mouse_intercept:set_size(
+    self.size.x - style.padding.x - (self.mouse_intercept.border.width * 2),
+    self.mouse_intercept.size.y
+  )
 
   return true
 end
