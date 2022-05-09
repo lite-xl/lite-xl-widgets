@@ -17,7 +17,17 @@ function Label:new(parent, label)
   Label.super.new(self, parent)
   self.clickable = false
   self.border.width = 0
+  self.custom_size = {x = 0, y = 0}
+
   self:set_label(label or "")
+end
+
+---@param width integer
+---@param height integer
+function Label:set_size(width, height)
+  Label.super.set_size(self, width, height)
+  self.custom_size.x = width
+  self.custom_size.y = height
 end
 
 ---Set the label text and recalculates the widget size.
@@ -25,24 +35,28 @@ end
 function Label:set_label(text)
   Label.super.set_label(self, text)
 
-  if type(text) == "table" then
-    self.size.x, self.size.y = self:draw_styled_text(text, 0, 0, true)
-  else
-    self.size.x = self.font:get_width(self.label)
-    self.size.y = self.font:get_height()
-  end
+  if self.custom_size.x <= 0 then
+    if type(text) == "table" then
+      self.size.x, self.size.y = self:draw_styled_text(text, 0, 0, true)
+    else
+      self.size.x = self.font:get_width(self.label)
+      self.size.y = self.font:get_height()
+    end
 
-  if self.border.width > 0 then
-    self.size.x = self.size.x + style.padding.x
-    self.size.y = self.size.y + style.padding.y
+    if self.border.width > 0 then
+      self.size.x = self.size.x + style.padding.x
+      self.size.y = self.size.y + style.padding.y
+    end
   end
 end
 
 function Label:update()
   if not Label.super.update(self) then return false end
 
-  -- update the size
-  self:set_label(self.label)
+  if self.custom_size.x <= 0 then
+    -- update the size
+    self:set_label(self.label)
+  end
 
   return true
 end
@@ -55,14 +69,16 @@ function Label:draw()
   local px = self.border.width > 0 and (style.padding.x / 2) or 0
   local py = self.border.width > 0 and (style.padding.y / 2) or 0
 
+  local posx, posy = self.position.x + px, self.position.y + py
+
   if type(self.label) == "table" then
-    self:draw_styled_text(self.label, self.position.x, self.position.y)
+    self:draw_styled_text(self.label, posx, posy)
   else
     renderer.draw_text(
       self.font,
       self.label,
-      self.position.x + px,
-      self.position.y + py,
+      posx,
+      posy,
       self.foreground_color or style.text
     )
   end
