@@ -64,10 +64,18 @@ function InputDialog:update()
 
   self.panel.size.x = self.panel:get_real_width() + style.padding.x
   self.panel.size.y = self.panel:get_real_height()
-  self.size.x = self:get_real_width()
+  self.size.x = self:get_real_width() - (style.padding.x / 2)
   self.size.y = self:get_real_height() + (style.padding.y / 2)
 
-  self.text:set_size(self.panel.size.x - style.padding.x * 2, self.text:get_real_height())
+  self.text:set_size(
+    self.size.x - style.padding.x - (self.text.border.width * 2),
+    self.text:get_real_height()
+  )
+
+  self.close:set_position(
+    self.size.x - self.close.size.x - (style.padding.x / 2),
+    style.padding.y / 2
+  )
 
   return true
 end
