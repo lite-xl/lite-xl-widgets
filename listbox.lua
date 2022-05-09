@@ -572,7 +572,7 @@ function ListBox:draw_row(row, x, y, only_calc)
     w = self.largest_row > 0 and self.largest_row or w
 
     if self.selected_row == row then
-      renderer.draw_rect(x, y, w, h, style.background2)
+      renderer.draw_rect(x, y, w, h, style.selection)
     end
 
     local mouse = self.mouse
@@ -585,7 +585,7 @@ function ListBox:draw_row(row, x, y, only_calc)
       and
       mouse.y <= y + h
     then
-      renderer.draw_rect(x, y, w, h, style.selection)
+      renderer.draw_rect(x, y, w, h, style.line_highlight)
       self.hovered_row = row
     end
     w, h = 0, 0
