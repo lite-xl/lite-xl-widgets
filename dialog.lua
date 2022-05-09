@@ -25,7 +25,7 @@ function Dialog:new(title)
   self.scrollable = false
 
   -- minimum width and height
-  self.size.mx = 300
+  self.size.mx = 400
   self.size.my = 150
 
   self.title = Label(self, "")
