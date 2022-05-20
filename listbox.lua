@@ -15,7 +15,9 @@ local Widget = require "widget"
 ---@field public longest integer
 local ListBoxColumn = {}
 
----@alias widget.listbox.row table<integer, renderer.font|renderer.color|integer|string>
+---@alias widget.listbox.drawcol fun(self, row, x, y, font, color, only_calc)
+
+---@alias widget.listbox.row table<integer, renderer.font|renderer.color|integer|string|widget.listbox.drawcol>
 
 ---@alias widget.listbox.colpos table<integer,integer>
 
@@ -98,7 +100,7 @@ function ListBox:add_row(row, data)
     local ridx = #self.rows
     for col, pos in ipairs(self.positions[ridx]) do
       if self.columns[col].expand then
-        local w = self:draw_row_range(row, pos[1], pos[2], 1, 1, true)
+        local w = self:draw_row_range(ridx, row, pos[1], pos[2], 1, 1, true)
 
         -- store the row with longest column for cheaper calculation
         self.columns[col].width = math.max(self.columns[col].width, w)
@@ -446,6 +448,7 @@ function ListBox:clear()
 end
 
 ---Render or calculate the size of the specified range of elements in a row.
+---@param ridx integer
 ---@param row widget.listbox.row
 ---@param start_idx integer
 ---@param end_idx integer
@@ -454,7 +457,7 @@ end
 ---@param only_calc boolean
 ---@return integer width
 ---@return integer height
-function ListBox:draw_row_range(row, start_idx, end_idx, x, y, only_calc)
+function ListBox:draw_row_range(ridx, row, start_idx, end_idx, x, y, only_calc)
   local font = self.font or style.font
   local color = self.foreground_color or style.text
   local width = 0
@@ -477,6 +480,11 @@ function ListBox:draw_row_range(row, start_idx, end_idx, x, y, only_calc)
       y = y + font:get_height()
       nx = x
       new_line = true
+    elseif ele_type == "function" then
+      local w, h = element(self, ridx, nx, y, font, color, only_calc)
+      nx = nx + width
+      height = math.max(height, h)
+      width = width + w
     elseif ele_type == "string" then
       local rx, ry, w, h = self:draw_text_multiline(
         font, element, nx, y, color, only_calc
@@ -509,6 +517,7 @@ function ListBox:get_col_width(col)
       if self.columns[col].longest then
         local id = self.columns[col].longest
         local width = self:draw_row_range(
+          id,
           self.rows[id],
           self.positions[id][col][1],
           self.positions[id][col][2],
@@ -522,6 +531,7 @@ function ListBox:get_col_width(col)
       local width = style.font:get_width(self.columns[col].name)
       for id, row in ipairs(self.rows) do
         local w, h = self:draw_row_range(
+          id,
           row,
           self.positions[id][col][1],
           self.positions[id][col][2],
@@ -599,6 +609,7 @@ function ListBox:draw_row(row, x, y, only_calc)
       -- padding on left
       w = w + style.padding.x / 2
       local cw, ch = self:draw_row_range(
+        row,
         self.rows[row],
         self.positions[row][col][1],
         self.positions[row][col][2],
@@ -613,6 +624,7 @@ function ListBox:draw_row(row, x, y, only_calc)
     end
   else
     local cw, ch = self:draw_row_range(
+      row,
       self.rows[row],
       1,
       #self.rows[row],
