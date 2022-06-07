@@ -551,8 +551,8 @@ end
 ---@param w integer
 ---@param h integer
 function ListBox:draw_header(w, h)
-  local x = self.position.x + self.border.width
-  local y = self.position.y + self.border.width
+  local x = self.position.x
+  local y = self.position.y
   renderer.draw_rect(x, y, w, h, style.dim)
   for _, col in ipairs(self.columns) do
     renderer.draw_text(
