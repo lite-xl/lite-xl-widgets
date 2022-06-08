@@ -34,7 +34,7 @@ local WidgetPosition = {}
 ---@alias widget.styledtext table<integer, renderer.font|renderer.color|integer|string>
 
 ---A base widget
----@class widget @global
+---@class widget : core.view
 ---@field public super widget
 ---@field public parent widget
 ---@field public name string
