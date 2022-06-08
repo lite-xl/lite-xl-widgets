@@ -197,7 +197,7 @@ function FoldingBook:draw()
     local x = pane.tab.position.x
     local y = pane.tab.position.y + pane.tab:get_height()
     local w = self:get_width() - (pane.container.border.width * 2)
-    renderer.draw_rect(x, y, w, 2, style.caret)
+    renderer.draw_rect(x, y, w, 2, style.selection)
   end
 
   return true

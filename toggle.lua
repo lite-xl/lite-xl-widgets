@@ -89,10 +89,10 @@ function Toggle:update()
   if not self.animate_switch then
     self.switch_x = switch_x
     self.toggle_bg = {}
-    local color = self.enabled and style.caret or style.dim
+    local color = self.enabled and style.caret or style.line_number
     for i=1, 4, 1 do self.toggle_bg[i] = color[i] end
   else
-    local color = self.enabled and style.caret or style.dim
+    local color = self.enabled and style.caret or style.line_number
     self:move_towards(self, "switch_x", switch_x, 0.2)
     for i=1, 4, 1 do
       self:move_towards(self.toggle_bg, i, color[i], 0.2)
@@ -121,7 +121,7 @@ function Toggle:draw()
     self.position.y + 4,
     20,
     self.size.y - (4 * 2),
-    style.accent
+    style.line_highlight
   )
 
   return true

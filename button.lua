@@ -91,7 +91,7 @@ end
 function Button:on_mouse_enter(...)
   Button.super.on_mouse_enter(self, ...)
   self.hover_text = style.accent
-  self.hover_back = style.dim
+  self.hover_back = style.line_highlight
 end
 
 function Button:on_mouse_leave(...)

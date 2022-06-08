@@ -553,7 +553,7 @@ end
 function ListBox:draw_header(w, h)
   local x = self.position.x
   local y = self.position.y
-  renderer.draw_rect(x, y, w, h, style.dim)
+  renderer.draw_rect(x, y, w, h, style.background2)
   for _, col in ipairs(self.columns) do
     renderer.draw_text(
       style.font,
