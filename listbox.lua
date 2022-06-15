@@ -431,6 +431,8 @@ function ListBox:resize_to_parent()
 
   self.size.y = self.parent.size.y
     - (self.border.width * 2)
+
+  self:set_visible_rows()
 end
 
 ---Remove all the rows from the listbox.
