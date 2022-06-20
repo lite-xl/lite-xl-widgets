@@ -82,7 +82,7 @@ local floating_widgets = {}
 
 ---When no parent is given to the widget constructor it will automatically
 ---overwrite RootView methods to intercept system events.
----@param parent widget
+---@param parent? widget
 ---@param floating? boolean | nil
 function Widget:new(parent, floating)
   Widget.super.new(self)
@@ -751,6 +751,7 @@ end
 ---Event emitted when the value of the widget changes.
 ---If applicable, child widgets should call this method
 ---when its value changes.
+---@param value any
 function Widget:on_change(value) end
 
 ---Click event emitted on a succesful on_mouse_pressed
