@@ -1071,26 +1071,28 @@ function Widget.override_rootview()
 
   function RootView:on_mouse_moved(x, y, dx, dy)
     local moved  = false
-    for i=#floating_widgets, 1, -1 do
-      local widget = floating_widgets[i]
-      if
-        (not widget.defer_draw and not widget.child_active)
-        or
-        widget.mouse_pressed_outside
-        or
-        (moved or not widget:on_mouse_moved(x, y, dx, dy))
-      then
-          if not widget.child_active and widget.outside_view then
-            core.set_active_view(widget.outside_view)
-            widget.outside_view = nil
+    if core.active_view ~= core.command_view then
+      for i=#floating_widgets, 1, -1 do
+        local widget = floating_widgets[i]
+        if
+          (not widget.defer_draw and not widget.child_active)
+          or
+          widget.mouse_pressed_outside
+          or
+          (moved or not widget:on_mouse_moved(x, y, dx, dy))
+        then
+            if not widget.child_active and widget.outside_view then
+              core.set_active_view(widget.outside_view)
+              widget.outside_view = nil
+            end
+        elseif not moved then
+          if not widget.child_active and widget.defer_draw then
+            if not widget.outside_view then
+              widget.outside_view = core.active_view
+            end
+            core.set_active_view(widget)
+            moved = true
           end
-      elseif not moved then
-        if not widget.child_active and widget.defer_draw then
-          if not widget.outside_view then
-            widget.outside_view = core.active_view
-          end
-          core.set_active_view(widget)
-          moved = true
         end
       end
     end
