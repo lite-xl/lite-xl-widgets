@@ -416,6 +416,54 @@ function ListBox:get_col_positions(row)
   return positions
 end
 
+---Move a row to the desired position if possible.
+---@param idx integer
+---@param pos integer
+---@return boolean moved
+function ListBox:move_row_to(idx, pos)
+  if idx == pos or (pos == #self.rows and #self.rows == 1) then return false end
+
+  if pos < 1 then pos = 1 end
+
+  local row = table.remove(self.rows, idx)
+  local position = table.remove(self.positions, idx)
+
+  if pos <= #self.rows then
+    table.insert(self.rows, pos, row)
+    table.insert(self.positions, pos, position)
+  else
+    table.insert(self.rows, row)
+    table.insert(self.positions, position)
+    pos = #self.rows
+  end
+
+  local moved_row_data = self.row_data[idx]
+  local swapped_row_data = self.row_data[pos]
+  self.row_data[idx] = swapped_row_data
+  self.row_data[pos] = moved_row_data
+
+  self.selected_row = pos
+
+  self:recalc_all_rows()
+  self:set_visible_rows()
+
+  return true
+end
+
+---Move a row one position up if possible.
+---@param idx integer
+---@return boolean moved
+function ListBox:move_row_up(idx)
+  return self:move_row_to(idx, idx-1)
+end
+
+---Move a row one position down if possible.
+---@param idx integer
+---@return boolean moved
+function ListBox:move_row_down(idx)
+  self:move_row_to(idx, idx+1)
+end
+
 ---Enables expanding the element to total size of parent on content updates.
 function ListBox:enable_expand(expand)
   self.expand = expand
