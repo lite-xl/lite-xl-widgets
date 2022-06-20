@@ -21,9 +21,9 @@ local NumberBox = Widget:extend()
 ---Constructor
 ---@param parent widget
 ---@param value number
----@param min number
----@param max number
----@param step number
+---@param min? number
+---@param max? number
+---@param step? number
 function NumberBox:new(parent, value, min, max, step)
   NumberBox.super.new(self, parent)
 
