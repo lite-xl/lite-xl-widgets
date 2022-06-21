@@ -179,9 +179,9 @@ core.status_view:add_item(
         end
       end
       if fontcache.building then
-        status = " searching system fonts" .. dots
+        status = " | searching system fonts" .. dots
       elseif fontcache.searching_monospaced then
-        status = " detecting monospaced fonts" .. dots
+        status = " | detecting monospaced fonts" .. dots
       end
     end
     return {
