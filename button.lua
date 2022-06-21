@@ -115,7 +115,9 @@ function Button:draw()
   if not Button.super.draw(self) then return false end
 
   local offsetx = self.position.x + self.padding.x
-  local offsety = self.position.y + self.padding.y
+  local offsety = self.position.y
+  local h = self:get_height()
+  local ih, th = style.icon_font:get_height(), self.font:get_height()
 
   if self.icon.code then
     local normal = self.icon.color or style.text
@@ -124,7 +126,7 @@ function Button:draw()
       style.icon_font,
       self.icon.code,
       offsetx,
-      offsety,
+      th > ih and (offsety + (h / 2)) - (ih/2) or (offsety + self.padding.y),
       self.hover_text and hover or normal
     )
     offsetx = offsetx + style.icon_font:get_width(self.icon.code) + (style.padding.x / 2)
@@ -135,7 +137,7 @@ function Button:draw()
       self.font,
       self.label,
       offsetx,
-      offsety,
+      ih > th and (offsety + (h / 2)) - (th/2) or (offsety + self.padding.y),
       self.hover_text or self.foreground_color or style.text
     )
   end
