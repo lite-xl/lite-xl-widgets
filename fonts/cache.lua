@@ -70,6 +70,7 @@ function FontCache:build()
       "Font cache generated in %.1fs for %s fonts!",
       system.get_time() - start_time, tostring(#self.fonts)
     )
+    self:verify_monospaced()
   end)
 end
 
