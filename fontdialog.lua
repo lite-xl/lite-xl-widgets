@@ -20,8 +20,9 @@ local Fonts = require "widget.fonts"
 ---@class widget.fontdialog : widget.dialog
 ---@field fontdata widget.fontslist.font
 ---@field preview widget.label
----@field choose widget.button
 ---@field font_size widget.numberbox
+---@field choose widget.button
+---@field choose_mono widget.button
 ---@field line widget.line
 ---@field antialiasing widget.selectbox
 ---@field hinting widget.selectbox
@@ -55,19 +56,33 @@ function FontDialog:new(font, options)
     self.border.color = style.text
   end
 
-  self.choose = Button(self.panel, "Choose a Font")
+  self.font_size = NumberBox(self.panel, 15, 5)
+  function self.font_size:on_change()
+    this:update_preview()
+  end
+
+  self.choose = Button(self.panel, "All")
   self.choose:set_icon("D")
+  self.choose:set_tooltip("Choose a Font")
   function self.choose:on_click()
     Fonts.show_picker(function(name, path)
       local fontdata = {name = name, path = path}
       this:set_font(fontdata)
       this:update_preview()
-    end)
+    end, false)
+    core.status_view:remove_tooltip()
   end
 
-  self.font_size = NumberBox(self.panel, 15, 5)
-  function self.font_size:on_change()
-    this:update_preview()
+  self.choose_mono = Button(self.panel, "Mono")
+  self.choose_mono:set_icon("D")
+  self.choose_mono:set_tooltip("Choose a Monospace Font")
+  function self.choose_mono:on_click()
+    Fonts.show_picker(function(name, path)
+      local fontdata = {name = name, path = path}
+      this:set_font(fontdata)
+      this:update_preview()
+    end, true)
+    core.status_view:remove_tooltip()
   end
 
   self.line = Line(self.panel)
@@ -146,6 +161,8 @@ function FontDialog:update_preview()
       options
     )
   end
+
+  collectgarbage "step"
 end
 
 ---@param font widget.fontslist.font
@@ -220,12 +237,17 @@ function FontDialog:update()
 
   self.preview:set_position(style.padding.x/2, style.padding.y/2)
 
-  self.choose:set_position(
+  self.font_size:set_position(
     style.padding.x/2,
     self.preview:get_bottom() + style.padding.y
   )
 
-  self.font_size:set_position(
+  self.choose:set_position(
+    self.font_size:get_right() + (style.padding.x/2),
+    self.preview:get_bottom() + style.padding.y
+  )
+
+  self.choose_mono:set_position(
     self.choose:get_right() + (style.padding.x/2),
     self.preview:get_bottom() + style.padding.y
   )
