@@ -4,11 +4,14 @@ local Object = require "core.object"
 local FontInfo = require "widget.fonts.info"
 
 ---@class widget.fonts.cache : core.object
----@field private fontinfo widget.fonts.info
----@field private building boolean
----@field private searching_monospaced boolean
----@field public fontdirs table<integer, string>
----@field public fonts widget.fonts.data[]
+---@field fontinfo widget.fonts.info
+---@field found integer
+---@field found_monospaced integer
+---@field building boolean
+---@field monosppaced boolean
+---@field searching_monospaced boolean
+---@field fontdirs table<integer, string>
+---@field fonts widget.fonts.data[]
 local FontCache = Object:extend()
 
 ---Constructor
@@ -17,6 +20,8 @@ function FontCache:new()
   self.fontdirs = {}
   self.fonts = {}
   self.loaded_fonts = {}
+  self.found = 0
+  self.found_monospaced = 0
   self.building = false
   self.searching_monospaced = false
   self.monospaced = false
@@ -51,6 +56,7 @@ function FontCache:build()
     return
   end
 
+  self.found = 0
   self.building = true
   self.monospaced = false
   self.loaded_fonts = {}
@@ -68,7 +74,7 @@ function FontCache:build()
     this.loaded_fonts = {}
     core.log_quiet(
       "Font cache generated in %.1fs for %s fonts!",
-      system.get_time() - start_time, tostring(#self.fonts)
+      system.get_time() - start_time, tostring(this.found)
     )
     self:verify_monospaced()
   end)
@@ -93,6 +99,7 @@ function FontCache:scan_dir(path, run_count)
           local font_data, errmsg = self.fontinfo:get_data()
           if font_data then
             table.insert(self.fonts, font_data)
+            self.found = self.found + 1
           else
             io.stderr:write(
               "Error: " .. path .. PATHSEP .. name .. "\n"
@@ -123,6 +130,7 @@ function FontCache:verify_monospaced()
     return
   end
 
+  self.found_monospaced = 0
   self.searching_monospaced = true
   self.monospaced = false
 
@@ -131,24 +139,21 @@ function FontCache:verify_monospaced()
 
   local this = self
   core.add_thread(function()
-    local found = 0
-    for i, font in ipairs(this.fonts) do
+    for _, font in ipairs(this.fonts) do
       if not font.monospace then
         FontInfo.check_is_monospace(font)
       end
       if font.monospace then
-        found = found + 1
+        this.found_monospaced = this.found_monospaced + 1
       end
-      if i % 1 == 0 then
-        coroutine.yield()
-      end
+      coroutine.yield()
     end
     this.monospaced = true
     this:save_cache()
     this.searching_monospaced = false
     core.log_quiet(
       "Found %s monospaced fonts in %.1fs!",
-      tostring(found), system.get_time() - start_time
+      tostring(this.found_monospaced), system.get_time() - start_time
     )
   end)
 end
@@ -159,6 +164,8 @@ function FontCache:load_cache()
   if ok then
     self.fonts = t.fonts
     self.monospaced = t.monospaced
+    self.found = t.found
+    self.found_monospaced = t.found_monospaced
     return true
   end
   return false
@@ -169,6 +176,8 @@ function FontCache:save_cache()
   local fp = io.open(USERDIR .. "/font_cache.lua", "w")
   if fp then
     local output = "{\n"
+      .. "found = "..tostring(self.found)..",\n"
+      .. "found_monospaced = "..tostring(self.found_monospaced)..",\n"
       .. "monospaced = "..tostring(self.monospaced)..",\n"
       .. "[\"fonts\"] = "
       .. common.serialize(
