@@ -19,6 +19,9 @@ local last_statusview_render = 0
 ---The amount of fonts matching the user query
 local matching_fonts = 0
 
+---Flag that indicates if command view font picker is for monospaced
+local pick_monospaced = false
+
 ---Generate the list of fonts displayed on the CommandView.
 ---@param monospaced? boolean Only display fonts detected as monospaced.
 local function generate_fonts(monospaced)
@@ -83,6 +86,8 @@ end
 function Fonts.show_picker(callback, monospaced)
   if not fontcache then fontcache = FontCache() end
 
+  pick_monospaced = monospaced
+
   if not fontcache.building and (not monospaced or fontcache.monospaced) then
     generate_fonts(monospaced)
   else
@@ -94,8 +99,8 @@ function Fonts.show_picker(callback, monospaced)
         and
         core.command_view.label == "Select Font: "
       do
-        coroutine.yield(2)
         core.command_view:update_suggestions()
+        coroutine.yield(2)
       end
       generate_fonts(monospaced)
       core.command_view:update_suggestions()
@@ -184,13 +189,21 @@ core.status_view:add_item(
         status = " | detecting monospaced fonts" .. dots
       end
     end
+
+    local found = 0
+    if fontcache.building or not pick_monospaced then
+      found = fontcache.found
+    else
+      found = fontcache.found_monospaced
+    end
+
     return {
       style.text,
       style.font,
       "Matches: "
         .. tostring(matching_fonts)
-        .. "/"
-        .. tostring(#fonts)
+        .. " / "
+        .. tostring(found)
         .. status
     }
   end,
