@@ -1,4 +1,3 @@
--- mod-version:2 -- lite-xl 2.00
 --
 -- Base widget implementation for lite.
 -- @copyright Jefferson Gonzalez
