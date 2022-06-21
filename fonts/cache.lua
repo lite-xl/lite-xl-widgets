@@ -35,6 +35,7 @@ function FontCache:new()
   elseif PLATFORM == "Mac OS X" then
     table.insert(self.fontdirs, HOME .. "/Library/Fonts")
     table.insert(self.fontdirs, "/Library/Fonts")
+    table.insert(self.fontdirs, "/System/Library/Fonts")
   else
     table.insert(self.fontdirs, HOME .. "/.local/share/fonts")
     table.insert(self.fontdirs, HOME .. "/.fonts")
