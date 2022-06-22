@@ -171,6 +171,7 @@ core.status_view:add_item(
   "widget:font-select",
   StatusView.Item.LEFT,
   function()
+    local found = 0
     local dots, status = "", ""
     if fontcache then
       if fontcache.building or fontcache.searching_monospaced then
@@ -188,13 +189,12 @@ core.status_view:add_item(
       elseif fontcache.searching_monospaced then
         status = " | detecting monospaced fonts" .. dots
       end
-    end
 
-    local found = 0
-    if fontcache.building or not pick_monospaced then
-      found = fontcache.found
-    else
-      found = fontcache.found_monospaced
+      if fontcache.building or not pick_monospaced then
+        found = fontcache.found
+      else
+        found = fontcache.found_monospaced
+      end
     end
 
     return {
