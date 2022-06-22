@@ -150,7 +150,7 @@ function TextBox:new(parent, text, placeholder)
 end
 
 ---@param width integer
----@param height integer Ignored on the textbox
+---@param height? integer Ignored on the textbox
 function TextBox:set_size(width, height)
   TextBox.super.set_size(
     self,
@@ -171,7 +171,7 @@ end
 
 --- Set the text displayed on the textbox.
 ---@param text string
----@param select boolean
+---@param select? boolean
 function TextBox:set_text(text, select)
   self.textview:set_text(text, select)
   self:on_change(text)
