@@ -27,8 +27,10 @@ function CheckBox:set_label(text)
 
   local bx, by, bw, bh = self:get_box_rect()
 
-  self.size.x = self.font:get_width(self.label) + bw + (style.padding.x / 2)
-  self.size.y = self.font:get_height()
+  local font = self:get_font()
+
+  self.size.x = font:get_width(self.label) + bw + (style.padding.x / 2)
+  self.size.y = font:get_height()
 end
 
 ---Change the status of the checkbox.
@@ -68,11 +70,12 @@ end
 
 function CheckBox:get_box_rect()
   local size = 1.6
-  local fh = self.font:get_height() / size
+  local font = self:get_font()
+  local fh = font:get_height() / size
   return
     self.position.x,
     self.position.y + (fh / (size * 2)),
-    self.font:get_width("x") + 4,
+    font:get_width("x") + 4,
     fh
 end
 
@@ -102,7 +105,7 @@ function CheckBox:draw()
   end
 
   renderer.draw_text(
-    self.font,
+    self:get_font(),
     self.label,
     self.position.x + bw + (style.padding.x / 2),
     self.position.y,

@@ -35,12 +35,14 @@ end
 function Label:set_label(text)
   Label.super.set_label(self, text)
 
+  local font = self:get_font()
+
   if self.custom_size.x <= 0 then
     if type(text) == "table" then
       self.size.x, self.size.y = self:draw_styled_text(text, 0, 0, true)
     else
-      self.size.x = self.font:get_width(self.label)
-      self.size.y = self.font:get_height()
+      self.size.x = font:get_width(self.label)
+      self.size.y = font:get_height()
     end
 
     if self.border.width > 0 then
@@ -75,7 +77,7 @@ function Label:draw()
     self:draw_styled_text(self.label, posx, posy)
   else
     renderer.draw_text(
-      self.font,
+      self:get_font(),
       self.label,
       posx,
       posy,

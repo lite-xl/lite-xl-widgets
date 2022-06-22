@@ -17,7 +17,7 @@ local ListBoxColumn = {}
 
 ---@alias widget.listbox.drawcol fun(self, row, x, y, font, color, only_calc)
 
----@alias widget.listbox.row table<integer, renderer.font|renderer.color|integer|string|widget.listbox.drawcol>
+---@alias widget.listbox.row table<integer, renderer.font|widget.fontreference|renderer.color|integer|string|widget.listbox.drawcol>
 
 ---@alias widget.listbox.colpos table<integer,integer>
 
@@ -65,7 +65,7 @@ function ListBox:new(parent)
   self.last_scale = 0
   self.last_offset = 0
 
-  self:set_size(200, (style.font:get_height() + (style.padding.y*2)) * 3)
+  self:set_size(200, (self:get_font():get_height() + (style.padding.y*2)) * 3)
 end
 
 ---If no width is given column will be set to automatically
@@ -76,7 +76,7 @@ end
 function ListBox:add_column(name, width, expand)
   local column = {
     name = name,
-    width = width or style.font:get_width(name),
+    width = width or self:get_font():get_width(name),
     expand = width and false or true
   }
 
@@ -125,7 +125,7 @@ function ListBox:calc_row_size_pos(ridx)
   if ridx == 1 then
     -- if columns are enabled leave some space to render them
     if #self.columns > 0 then
-      y = y + style.font:get_height() + style.padding.y
+      y = y + self:get_font():get_height() + style.padding.y
     end
   else
     y = y + self.rows[ridx-1].y + self.rows[ridx-1].h
@@ -162,7 +162,7 @@ function ListBox:set_visible_rows()
   -- substract column heading from list height
   local colh = 0
   if #self.columns > 0 then
-    colh = style.font:get_height() + style.padding.y
+    colh = self:get_font():get_height() + style.padding.y
     h = h - colh
   end
 
@@ -508,7 +508,7 @@ end
 ---@return integer width
 ---@return integer height
 function ListBox:draw_row_range(ridx, row, start_idx, end_idx, x, y, only_calc)
-  local font = self.font or style.font
+  local font = self:get_font()
   local color = self.foreground_color or style.text
   local width = 0
   local height = font:get_height()
@@ -521,9 +521,17 @@ function ListBox:draw_row_range(ridx, row, start_idx, end_idx, x, y, only_calc)
     if
       ele_type == "userdata"
       or
-      (ele_type == "table" and type(element[1]) == "userdata")
+      (
+        ele_type == "table"
+        and
+        (element.container or type(element[1]) == "userdata")
+      )
     then
-      font = element
+      if ele_type == "table" and element.container then
+        font = element.container[element.name]
+      else
+        font = element
+      end
     elseif ele_type == "table" then
       color = element
     elseif element == ListBox.NEWLINE then
@@ -578,7 +586,7 @@ function ListBox:get_col_width(col)
         return width
       end
 
-      local width = style.font:get_width(self.columns[col].name)
+      local width = self:get_font():get_width(self.columns[col].name)
       for id, row in ipairs(self.rows) do
         local w, h = self:draw_row_range(
           id,
@@ -606,7 +614,7 @@ function ListBox:draw_header(w, h)
   renderer.draw_rect(x, y, w, h, style.background2)
   for _, col in ipairs(self.columns) do
     renderer.draw_text(
-      style.font,
+      self:get_font(),
       col.name,
       x + style.padding.x / 2,
       y + style.padding.y / 2,
@@ -761,9 +769,10 @@ function ListBox:draw()
 
   local new_width = 0
   local new_height = 0
+  local font = self:get_font()
 
   if #self.columns > 0 then
-    new_height = new_height + style.font:get_height() + style.padding.y
+    new_height = new_height + font:get_height() + style.padding.y
     for _, col in ipairs(self.columns) do
       new_width = new_width + col.width + style.padding.x
     end
@@ -809,7 +818,7 @@ function ListBox:draw()
   if #self.columns > 0 then
     self:draw_header(
       self.largest_row,
-      style.font:get_height() + style.padding.y
+      font:get_height() + style.padding.y
     )
   end
 

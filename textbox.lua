@@ -3,7 +3,6 @@
 --
 
 local core = require "core"
-local config = require "core.config"
 local command = require "core.command"
 local style = require "core.style"
 local Doc = require "core.doc"
@@ -12,14 +11,16 @@ local View = require "core.view"
 local Widget = require "widget"
 
 
----@class widget.textbox.SingleLineDoc
+---@class widget.textbox.SingleLineDoc : core.doc
+---@field super core.doc
 local SingleLineDoc = Doc:extend()
 
 function SingleLineDoc:insert(line, col, text)
   SingleLineDoc.super.insert(self, line, col, text:gsub("\n", ""))
 end
 
----@class widget.textbox.TextView
+---@class widget.textbox.TextView : core.docview
+---@field super core.docview
 local TextView = DocView:extend()
 
 function TextView:new()
@@ -113,7 +114,7 @@ function TextBox:new(parent, text, placeholder)
   self.textview.name = parent.name
   self.size.x = 200 + (style.padding.x * 2)
   self.textview.size.x = self.size.x
-  self.size.y = self.font:get_height() + (style.padding.y * 2)
+  self.size.y = self:get_font():get_height() + (style.padding.y * 2)
   self.placeholder = placeholder or ""
   self.placeholder_active = false
   -- this widget is for text input
@@ -154,7 +155,7 @@ function TextBox:set_size(width, height)
   TextBox.super.set_size(
     self,
     width,
-    self.font:get_height() + (style.padding.y * 2)
+    self:get_font():get_height() + (style.padding.y * 2)
   )
   self.textview.size.x = self.size.x
 end
@@ -249,7 +250,7 @@ function TextBox:update()
   if not TextBox.super.update(self) then return false end
 
   self.textview:update()
-  self.size.y = self.font:get_height() + (style.padding.y * 2)
+  self.size.y = self:get_font():get_height() + (style.padding.y * 2)
 
   return true
 end

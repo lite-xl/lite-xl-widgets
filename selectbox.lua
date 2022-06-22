@@ -22,7 +22,7 @@ local SelectBox = Widget:extend()
 function SelectBox:new(parent, label)
   SelectBox.super.new(self, parent)
   self.size.x = 200 + (style.padding.x * 2)
-  self.size.y = self.font:get_height() + (style.padding.y * 2)
+  self.size.y = self:get_font():get_height() + (style.padding.y * 2)
   self.list_container = Widget()
   self.list_container:set_size(
     self.size.x - self.list_container.border.width,
@@ -74,12 +74,12 @@ end
 ---a chopped version with the overflow_chars appended to it.
 ---@param text string
 ---@param max_width number
----@param font renderer.font Default is style.font
+---@param font widget.font Default is style.font
 ---@param overflow_chars string Default is '...'
 ---@return string chopped_text
 ---@return boolean overflows True if the text overflows
 function SelectBox:text_overflow(text, max_width, font, overflow_chars)
-  font = font or style.font
+  font = self:get_font(font)
   overflow_chars = overflow_chars or "..."
 
   local overflow = false
@@ -203,7 +203,7 @@ end
 function SelectBox:update()
   if not SelectBox.super.update(self) then return false end
 
-  local font = self.font or style.font
+  local font = self:get_font()
 
   self.size.y = font:get_height() + style.padding.y * 2
 
@@ -221,7 +221,7 @@ end
 function SelectBox:draw()
   if not SelectBox.super.draw(self) then return false end
 
-  local font = self.font or style.font
+  local font = self:get_font()
 
   local icon_width = style.icon_font:get_width("+")
 

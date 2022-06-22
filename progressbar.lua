@@ -25,7 +25,7 @@ function ProgressBar:new(parent, percent, width)
   self.percent = percent or 0
   self.percent_width = 0
   self.show_percent = true
-  self:set_size(width or 200, style.font:get_height() + style.padding.y)
+  self:set_size(width or 200, self:get_font():get_height() + style.padding.y)
 end
 
 ---@param percent number
@@ -41,12 +41,14 @@ end
 function ProgressBar:update()
   if not ProgressBar.super.update(self) then return false end
 
+  local font = self:get_font()
+
   -- update the size
   self:set_label(self.percent .. "%")
 
   self:set_size(
     self.size.x,
-    style.font:get_height() + style.padding.y
+    font:get_height() + style.padding.y
   )
 
   local percent_width = (self.size.x * (self.percent / 100)) - self.border.width * 2
@@ -55,7 +57,7 @@ function ProgressBar:update()
 
   if self.show_percent then
     self.percent_x = (self:get_width() / 2)
-      - (style.font:get_width(self.label) / 2)
+      - (font:get_width(self.label) / 2)
 
     self.percent_y = style.padding.y / 2
   end
@@ -76,7 +78,7 @@ function ProgressBar:draw()
 
   if self.show_percent then
     renderer.draw_text(
-      style.font,
+      self:get_font(),
       self.label,
       self.position.x + self.percent_x,
       self.position.y + self.percent_y,

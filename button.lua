@@ -66,13 +66,15 @@ end
 function Button:set_label(text)
   Button.super.set_label(self, text)
 
+  local font = self:get_font()
+
   if self.expanded and self.parent then
     self.size.x = self.parent.size.x - self.position.rx
   else
-    self.size.x = self.font:get_width(self.label) + (self.padding.x * 2)
+    self.size.x = font:get_width(self.label) + (self.padding.x * 2)
   end
 
-  self.size.y = self.font:get_height() + (self.padding.y * 2)
+  self.size.y = font:get_height() + (self.padding.y * 2)
 
   if self.icon.code then
     local icon_w = style.icon_font:get_width(self.icon.code)
@@ -114,10 +116,12 @@ function Button:draw()
 
   if not Button.super.draw(self) then return false end
 
+  local font = self:get_font()
+
   local offsetx = self.position.x + self.padding.x
   local offsety = self.position.y
   local h = self:get_height()
-  local ih, th = style.icon_font:get_height(), self.font:get_height()
+  local ih, th = style.icon_font:get_height(), font:get_height()
 
   if self.icon.code then
     local normal = self.icon.color or style.text
@@ -134,7 +138,7 @@ function Button:draw()
 
   if self.label ~= "" then
     renderer.draw_text(
-      self.font,
+      font,
       self.label,
       offsetx,
       ih > th and (offsety + (h / 2)) - (th/2) or (offsety + self.padding.y),

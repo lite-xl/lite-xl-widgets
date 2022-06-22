@@ -26,11 +26,19 @@ local WidgetBorder = {}
 ---@field public dy number Dragging initial y position
 local WidgetPosition = {}
 
+---Represents a reference to a font stored elsewhere.
+---@class widget.fontreference
+---@field public container table<string, renderer.font>
+---@field public name string
+local WidgetFontReference = {}
+
+---@alias widget.font widget.fontreference | renderer.font | string
+
 ---@alias widget.clicktype
 ---|>'"left"'
 ---| '"right"'
 
----@alias widget.styledtext table<integer, renderer.font|renderer.color|integer|string>
+---@alias widget.styledtext table<integer, renderer.font|widget.fontreference|renderer.color|integer|string>
 
 ---A base widget
 ---@class widget : core.view
@@ -46,7 +54,7 @@ local WidgetPosition = {}
 ---@field public clickable boolean
 ---@field public draggable boolean
 ---@fie;d public scrollable boolean
----@field public font renderer.font
+---@field public font widget.font
 ---@field public foreground_color renderer.color
 ---@field public background_color renderer.color
 ---@field public render_background boolean
@@ -109,7 +117,7 @@ function Widget:new(parent, floating)
   self.clickable = true
   self.draggable = false
   self.dragged = false
-  self.font = style.font
+  self.font = "font"
   self.tooltip = ""
   self.label = ""
   self.input_text = false
@@ -227,7 +235,7 @@ end
 
 ---Taken from the logview and modified it a tiny bit.
 ---TODO: something similar should be on lite-xl core.
----@param font renderer.font
+---@param font widget.font
 ---@param text string
 ---@param x integer
 ---@param y integer
@@ -238,6 +246,7 @@ end
 ---@return integer width
 ---@return integer height
 function Widget:draw_text_multiline(font, text, x, y, color, only_calc)
+  font = self:get_font(font)
   local th = font:get_height()
   local resx, resy = x, y
   local width, height = 0, 0
@@ -266,7 +275,7 @@ end
 ---@return integer width
 ---@return integer height
 function Widget:draw_styled_text(text, x, y, only_calc, start_idx, end_idx)
-  local font = self.font or style.font
+  local font = self:get_font()
   local color = self.foreground_color or style.text
   local width = 0
   local height = font:get_height()
@@ -282,9 +291,13 @@ function Widget:draw_styled_text(text, x, y, only_calc, start_idx, end_idx)
     if
       ele_type == "userdata"
       or
-      (ele_type == "table" and type(element[1]) == "userdata")
+      (element.container or type(element[1]) == "userdata")
     then
-      font = element
+      if ele_type == "table" and element.container then
+        font = element.container[element.name]
+      else
+        font = element
+      end
     elseif ele_type == "table" then
       color = element
     elseif element == Widget.NEWLINE then
@@ -421,6 +434,25 @@ function Widget:set_position(x, y)
   for _, child in pairs(self.childs) do
     child:set_position(child.position.rx, child.position.ry)
   end
+end
+
+---Get the real renderer.font associated with a widget.font.
+---@param font? widget.font
+---@return renderer.font
+function Widget:get_font(font)
+  if not font then font = self.font end
+  local font_type = type(font)
+  if font_type == "userdata" then
+    return font
+  elseif font_type == "string" then
+    return style[font]
+  elseif font and font.container then
+    return font.container[font.name]
+  end
+  if not font then
+    return style.font
+  end
+  return font
 end
 
 ---Get the relative position in relation to parent
@@ -906,12 +938,17 @@ function Widget:update()
   if not self:is_visible() then return false end
 
   if self.current_scale ~= SCALE then
-    if self.font ~= style.font then
-      self.font = self.font:copy(
+    local font_type = type(self.font)
+    if
+      font_type == "userdata"
+      or
+      (font_type == "table" and not self.font.container)
+    then
+      self.font = self.font:set_size(
         self.font:get_size() * (SCALE / self.current_scale)
       )
-      self.current_scale = SCALE
     end
+    self.current_scale = SCALE
   end
 
   Widget.super.update(self)
