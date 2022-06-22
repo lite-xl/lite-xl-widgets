@@ -8,6 +8,11 @@ local style = require "core.style"
 local Widget = require "widget"
 local Label = require "widget.label"
 
+-- Hold dimensions of rendered toggle
+local BOX = 40
+local TOGGLE = 15
+local BORDER = 3
+
 ---@class widget.toggle : widget
 ---@field public enabled boolean
 ---@field private caption_label widget.textbox
@@ -33,8 +38,8 @@ function Toggle:new(parent, label, enable)
   self.border.width = 0
 
   self:set_size(
-    self.caption_label:get_width() + (style.padding.x / 2) + 50,
-    self.caption_label:get_height() + (self.padding * 2)
+    self.caption_label:get_width() + (style.padding.x / 2) + (BOX * SCALE),
+    self.caption_label:get_height() + ((self.padding * 2) * SCALE)
   )
 
   self.animate_switch = false
@@ -75,16 +80,17 @@ function Toggle:update()
   local px = style.padding.x / 2
 
   self:set_size(
-    self.caption_label:get_width() + px + 50,
-    self.caption_label:get_height() + (self.padding * 2)
+    self.caption_label:get_width() + px + (BOX * SCALE),
+    self.caption_label:get_height() + ((self.padding * 2) * SCALE)
   )
 
   self.toggle_x = self.caption_label:get_right() + px
 
   local switch_x = self.enabled and
-    self.position.x + self.toggle_x + 50 - 20 - 4
+    self.position.x + self.toggle_x
+      + ((BOX - TOGGLE - BORDER) * SCALE)
     or
-    self.position.x + self.toggle_x + 4
+    self.position.x + self.toggle_x + (BORDER * SCALE)
 
   if not self.animate_switch then
     self.switch_x = switch_x
@@ -111,16 +117,16 @@ function Toggle:draw()
   renderer.draw_rect(
     self.position.x + self.toggle_x,
     self.position.y,
-    50,
+    BOX * SCALE,
     self.size.y,
     self.toggle_bg
   )
 
   renderer.draw_rect(
     self.switch_x,
-    self.position.y + 4,
-    20,
-    self.size.y - (4 * 2),
+    self.position.y + (BORDER * SCALE),
+    TOGGLE * SCALE,
+    self.size.y - ((BORDER * 2) * SCALE),
     style.line_highlight
   )
 
