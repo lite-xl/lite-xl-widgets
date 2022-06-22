@@ -174,7 +174,7 @@ end
 
 ---Overrided to enforce minimum allowed size.
 ---@param width integer
----@param height integer Ignored on the number box
+---@param height? integer Ignored on the number box
 function NumberBox:set_size(width, height)
   local buttons_w = self.decrease_button:get_width()
     + self.increase_button:get_width()
@@ -189,7 +189,7 @@ function NumberBox:set_size(width, height)
   NumberBox.super.set_size(
     self,
     width + self.textbox.border.width * 2,
-    self.textbox:get_height()
+    math.max(self.textbox:get_height(), self.increase_button:get_height())
   )
 end
 
