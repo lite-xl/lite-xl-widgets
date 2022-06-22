@@ -932,6 +932,12 @@ function Widget:on_mouse_wheel(y)
   return false
 end
 
+---Can be overriden by widgets to listen for scale change events to apply
+---any neccesary changes in sizes, padding, etc...
+---@param new_scale number
+---@param prev_scale number
+function Widget:rescale(new_scale, prev_scale) end
+
 ---If visible execute the widget calculations and returns true.
 ---@return boolean
 function Widget:update()
@@ -947,6 +953,9 @@ function Widget:update()
       self.font = self.font:set_size(
         self.font:get_size() * (SCALE / self.current_scale)
       )
+    end
+    for _, child in pairs(self.childs) do
+      child:rescale(SCALE, self.current_scale)
     end
     self.current_scale = SCALE
   end
