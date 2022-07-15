@@ -163,14 +163,14 @@ function Fonts.show_picker_ask_monospace(callback)
   })
 end
 
-core.status_view:add_item(
-  function()
+core.status_view:add_item({
+  predicate = function()
     return core.active_view == core.command_view
       and core.command_view.label == "Select Font: "
   end,
-  "widget:font-select",
-  StatusView.Item.LEFT,
-  function()
+  name = "widget:font-select",
+  alignment = StatusView.Item.LEFT,
+  get_item = function()
     local found = 0
     local dots, status = "", ""
     if fontcache then
@@ -207,9 +207,8 @@ core.status_view:add_item(
         .. status
     }
   end,
-  nil,
-  1
-)
+  position = 1
+})
 
 
 return Fonts
