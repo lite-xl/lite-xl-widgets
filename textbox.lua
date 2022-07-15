@@ -64,6 +64,10 @@ function TextView:get_gutter_width()
   return self.gutter_width
 end
 
+function TextView:get_line_height()
+  return math.floor(self:get_font():get_height() * 1.2)
+end
+
 function TextView:draw_line_gutter(idx, x, y)
   if self.hide_lines_gutter then
     return
