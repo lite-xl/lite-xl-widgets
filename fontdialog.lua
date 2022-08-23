@@ -29,6 +29,8 @@ local Fonts = require "widget.fonts"
 ---@field bold widget.checkbox
 ---@field italic widget.checkbox
 ---@field underline widget.checkbox
+---@field smoothing widget.checkbox
+---@field strikethrough widget.checkbox
 ---@field save widget.button
 ---@field cancel widget.button
 local FontDialog = Dialog:extend()
@@ -113,6 +115,14 @@ function FontDialog:new(font, options)
   end
   self.underline = CheckBox(self.panel, "Underline")
   function self.underline:on_checked()
+    this:update_preview()
+  end
+  self.smoothing = CheckBox(self.panel, "Smooth")
+  function self.smoothing:on_checked()
+    this:update_preview()
+  end
+  self.strikethrough = CheckBox(self.panel, "Strike")
+  function self.strikethrough:on_checked()
     this:update_preview()
   end
 
@@ -213,6 +223,12 @@ function FontDialog:set_options(options)
   if options.underline ~= nil then
     self.underline:set_checked(options.underline)
   end
+  if options.smoothing ~= nil then
+    self.smoothing:set_checked(options.smoothing)
+  end
+  if options.strikethrough ~= nil then
+    self.strikethrough:set_checked(options.strikethrough)
+  end
 end
 
 ---@return renderer.fontoptions
@@ -223,7 +239,9 @@ function FontDialog:get_options()
     hinting = self.hinting:get_selected_data() or "none",
     bold = self.bold:is_checked(),
     italic = self.italic:is_checked(),
-    underline = self.underline:is_checked()
+    underline = self.underline:is_checked(),
+    smoothing = self.smoothing:is_checked(),
+    strikethrough = self.strikethrough:is_checked()
   }
 end
 
@@ -276,6 +294,14 @@ function FontDialog:update()
   )
   self.underline:set_position(
     self.italic:get_right() + style.padding.x,
+    self.hinting:get_bottom() + style.padding.y
+  )
+  self.smoothing:set_position(
+    self.underline:get_right() + style.padding.x,
+    self.hinting:get_bottom() + style.padding.y
+  )
+  self.strikethrough:set_position(
+    self.smoothing:get_right() + style.padding.x,
     self.hinting:get_bottom() + style.padding.y
   )
 
