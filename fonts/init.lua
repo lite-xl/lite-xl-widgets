@@ -163,6 +163,12 @@ function Fonts.show_picker_ask_monospace(callback)
   })
 end
 
+---Remove current fonts cache file and regenerates a fresh one.
+function Fonts.clean_cache()
+  if not fontcache then fontcache = FontCache() end
+  fontcache:rebuild()
+end
+
 core.status_view:add_item({
   predicate = function()
     return core.active_view == core.command_view

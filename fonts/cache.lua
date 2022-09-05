@@ -81,6 +81,23 @@ function FontCache:build()
   end)
 end
 
+---Clear current font cache and rebuild it.
+function FontCache:rebuild()
+  if self.building or self.searching_monospaced then
+    core.log_quiet("The font cache is already been generated, please wait.")
+  end
+
+  local fontcache_file = USERDIR .. "/font_cache.lua"
+  local file = io.open(fontcache_file, "r")
+
+  if file ~= nil then
+    file:close()
+    os.remove(fontcache_file)
+  end
+
+  self:build()
+end
+
 ---Scan a directory for valid font files and load them into the cache.
 ---@param path string
 ---@param run_count? integer
