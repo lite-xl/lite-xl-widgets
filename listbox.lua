@@ -77,7 +77,7 @@ function ListBox:add_column(name, width, expand)
   local column = {
     name = name,
     width = width or self:get_font():get_width(name),
-    expand = width and false or true
+    expand = expand and expand or (width and false or true)
   }
 
   table.insert(self.columns, column)
@@ -629,7 +629,7 @@ end
 ---@param row integer
 ---@param x integer
 ---@param y integer
----@param only_calc boolean
+---@param only_calc? boolean
 ---@return integer width
 ---@return integer height
 function ListBox:draw_row(row, x, y, only_calc)
@@ -798,7 +798,7 @@ function ListBox:draw()
   local y = oy + self.position.y + self.border.width + new_height
 
   core.push_clip_rect(
-    self.position.x, self.position.y, self:get_width(), self:get_height()
+    self.position.x, self.position.y, self.size.x, self.size.y
   )
   for _, ridx in ipairs(self.visible_rows) do
     if self.rows[ridx] then

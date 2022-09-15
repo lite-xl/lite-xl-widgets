@@ -199,17 +199,11 @@ function KeybindDialog:update()
   self.size.x = self:get_real_width() - (style.padding.x / 2)
   self.size.y = self:get_real_height() + (style.padding.y / 2)
 
-  self.shortcuts:set_size(
-    self.size.x - style.padding.x - (self.shortcuts.border.width * 2),
-    self.shortcuts.size.y
-  )
+  self.shortcuts:set_size(self.size.x - style.padding.x)
 
   self.line:set_width(self.size.x - style.padding.x)
 
-  self.mouse_intercept:set_size(
-    self.size.x - style.padding.x - (self.mouse_intercept.border.width * 2),
-    self.mouse_intercept.size.y
-  )
+  self.mouse_intercept:set_size(self.size.x - style.padding.x)
 
   return true
 end

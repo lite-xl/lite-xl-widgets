@@ -8,9 +8,9 @@ local style = require "core.style"
 local Widget = require "widget"
 
 ---@class widget.button.icon
----@field public code string
----@field public color renderer.color
----@field public hover_color renderer.color
+---@field public code string | nil
+---@field public color renderer.color | nil
+---@field public hover_color renderer.color | nil
 local ButtonIcon = {}
 
 ---@class widget.button : widget
@@ -67,14 +67,15 @@ function Button:set_label(text)
   Button.super.set_label(self, text)
 
   local font = self:get_font()
+  local border = self.border.width * 2
 
   if self.expanded and self.parent then
-    self.size.x = self.parent.size.x - self.position.rx
+    self.size.x = self.parent.size.x - self.position.rx - border
   else
-    self.size.x = font:get_width(self.label) + (self.padding.x * 2)
+    self.size.x = font:get_width(self.label) + (self.padding.x * 2) - border
   end
 
-  self.size.y = font:get_height() + (self.padding.y * 2)
+  self.size.y = font:get_height() + (self.padding.y * 2) - border
 
   if self.icon.code then
     local icon_w = style.icon_font:get_width(self.icon.code)
@@ -83,7 +84,7 @@ function Button:set_label(text)
       icon_w = icon_w + (self.padding.x / 2)
     end
 
-    local icon_h = style.icon_font:get_height() + (self.padding.y * 2)
+    local icon_h = style.icon_font:get_height() + (self.padding.y * 2) - border
 
     self.size.x = self.size.x + icon_w
     self.size.y = math.max(self.size.y, icon_h)
@@ -102,7 +103,7 @@ function Button:on_mouse_leave(...)
   self.hover_back = nil
 end
 
-function Button:rescale(new_scale, prev_scale)
+function Button:on_rescale(new_scale, prev_scale)
   self.padding.x = self.padding.x * (new_scale / prev_scale)
   self.padding.y = self.padding.y * (new_scale / prev_scale)
 end

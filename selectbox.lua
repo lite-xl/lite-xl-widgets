@@ -160,7 +160,7 @@ function SelectBox:reposition_container()
     )
   end
 
-  self.list_container.size.x = self.size.x
+  self.list_container.size.x = self.size.x - (self.border.width * 2)
 end
 
 ---Overrided to destroy the floating listbox container.

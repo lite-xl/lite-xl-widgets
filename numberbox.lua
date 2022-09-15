@@ -102,7 +102,7 @@ function NumberBox:set_value(value)
   elseif type(value) == "string" and tonumber(value) then
     self.textbox:set_text(value)
   else
-    self.textbox:set_text(self.minimum)
+    self.textbox:set_text(tostring(self.minimum))
   end
   self.textbox.placeholder_active = false
   self.current_text = self.textbox:get_text()
@@ -116,8 +116,8 @@ function NumberBox:get_value()
 end
 
 ---Set the minimum and maximum values allowed.
----@param min number
----@param max number
+---@param min? number
+---@param max? number
 function NumberBox:set_range(min, max)
   self.minimum = min or math.mininteger
   self.maximum = max or math.maxinteger
@@ -188,8 +188,15 @@ function NumberBox:set_size(width, height)
 
   NumberBox.super.set_size(
     self,
-    width + self.textbox.border.width * 2,
-    math.max(self.textbox:get_height(), self.increase_button:get_height())
+    width,
+    math.max(
+      self.textbox:get_height(),
+      self.decrease_button:get_height(),
+      self.increase_button:get_height()
+    )
+    -- TODO: check what causes the need for this border size addition since
+    -- it shouldn't be needed but for now fixes occasional bottom border cut.
+    + self.increase_button.border.width
   )
 end
 
@@ -208,7 +215,6 @@ function NumberBox:update()
     self.textbox:get_width()
       + self.decrease_button:get_width()
       + self.increase_button:get_width()
-      - (self.textbox.border.width * 2)
   )
 
   self.textbox:set_position(0, 0)

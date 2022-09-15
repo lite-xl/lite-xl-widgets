@@ -47,11 +47,11 @@ function ProgressBar:update()
   self:set_label(self.percent .. "%")
 
   self:set_size(
-    self.size.x,
+    nil,
     font:get_height() + style.padding.y
   )
 
-  local percent_width = (self.size.x * (self.percent / 100)) - self.border.width * 2
+  local percent_width = (self.size.x * (self.percent / 100))
 
   self:move_towards(self, "percent_width", percent_width, 0.2)
 
@@ -69,10 +69,10 @@ function ProgressBar:draw()
   if not ProgressBar.super.draw(self) then return false end
 
   renderer.draw_rect(
-    self.position.x + self.border.width,
-    self.position.y + self.border.width,
+    self.position.x,
+    self.position.y,
     self.percent_width,
-    self.size.y - self.border.width * 2,
+    self.size.y,
     style.dim
   )
 

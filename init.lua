@@ -13,7 +13,7 @@ local RootView = require "core.rootview"
 ---Represents the border of a widget.
 ---@class widget.border
 ---@field public width number
----@field public color renderer.color
+---@field public color renderer.color | nil
 local WidgetBorder = {}
 
 ---Represents the position of a widget.
@@ -43,12 +43,12 @@ local WidgetFontReference = {}
 ---A base widget
 ---@class widget : core.view
 ---@field public super widget
----@field public parent widget
+---@field public parent widget | nil
 ---@field public name string
 ---@field public position widget.position
 ---@field public size widget.position
 ---@field public childs table<integer,widget>
----@field public child_active widget
+---@field public child_active widget | nil
 ---@field public zindex integer
 ---@field public border widget.border
 ---@field public clickable boolean
@@ -67,7 +67,6 @@ local WidgetFontReference = {}
 ---@field private textview widget
 ---@field private next_zindex integer
 ---@field private mouse widget.position
----@field private prev_position widget.position
 ---@field private prev_size widget.position
 ---@field private mouse_is_pressed boolean
 ---@field private mouse_is_hovering boolean
@@ -80,7 +79,7 @@ local Widget = View:extend()
 Widget.NEWLINE = 1
 
 ---Keep track of last hovered widget to properly trigger on_mouse_leave
----@type widget
+---@type widget | nil
 local last_hovered_child = nil
 
 ---A list of floating widgets that need to receive events.
@@ -123,7 +122,6 @@ function Widget:new(parent, floating)
   self.input_text = false
   self.textview = nil
   self.mouse = {x = 0, y = 0}
-  self.prev_position = {x = 0, y = 0}
   self.prev_size = {x = 0, y = 0}
   self.was_scrolling = false
 
@@ -135,14 +133,14 @@ function Widget:new(parent, floating)
 
   self.current_scale = SCALE
 
-  self:set_position(0, 0)
-
   if parent then
     parent:add_child(self)
   elseif self.defer_draw then
     table.insert(floating_widgets, self)
     Widget.override_rootview()
   end
+
+  self:set_position(0, 0)
 end
 
 ---Add a child widget, automatically assign a zindex if non set and sorts
@@ -151,12 +149,11 @@ end
 function Widget:add_child(child)
   if not child.zindex then
     child.zindex = self.next_zindex
+    self.next_zindex = self.next_zindex + 1
   end
 
   table.insert(self.childs, child)
   table.sort(self.childs, function(t1, t2) return t1.zindex > t2.zindex end)
-
-  self.next_zindex = self.next_zindex + 1
 end
 
 ---Remove a child widget.
@@ -342,11 +339,6 @@ function Widget:draw_border(x, y, w, h)
   w = w + (self.border.width * 2)
   h = h + (self.border.width * 2)
 
-  -- renderer.draw_rect(
-  --   x, y, w + x % 1, h + y % 1,
-  --   self.border.color or style.text
-  -- )
-
   -- Draw lines instead of full rectangle to be able to draw on top
 
   --top
@@ -382,16 +374,50 @@ function Widget:set_target_size(axis, value)
   return true
 end
 
----@param width integer
----@param height integer
+---@param width? integer
+---@param height? integer
 function Widget:set_size(width, height)
-  if not self.parent and not self.visible then
-    self.prev_size.x = width
-    self.prev_size.y = height
-  else
-    self.size.x = width
-    self.size.y = height
+  -- take into consideration the border as part of size
+  if width then
+    if width > (self.border.width * 2) then
+      width = width - (self.border.width * 2)
+    else
+      width = 0
+    end
   end
+  if height then
+    if height > (self.border.width * 2) then
+      height = height - (self.border.width * 2)
+    else
+      height = 0
+    end
+  end
+
+  if not self.parent and not self.visible then
+    if width then self.prev_size.x = width end
+    if height then self.prev_size.y = height end
+  else
+    if width then self.size.x = width end
+    if height then self.size.y = height end
+  end
+end
+
+---Set the widget border size and appropriately re-set the widget size.
+---@param width integer
+function Widget:set_border_width(width)
+  local wwidth, wheight = 0, 0;
+  if self.border.width > 0 then
+    local prev_width = self.border.width * 2
+    if not self.parent and not self.visible then
+      wwidth = self.prev_size.x + prev_width
+      wheight = self.prev_size.y + prev_width
+    else
+      wwidth = self.size.x + prev_width
+      wheight = self.size.y + prev_width
+    end
+  end
+  self.border.width = width
+  self:set_size(wwidth, wheight)
 end
 
 ---Called on the update function to be able to scroll the child widgets.
@@ -412,27 +438,31 @@ function Widget:update_position()
 end
 
 ---Set the position of the widget and updates the child absolute coordinates
----@param x integer
----@param y integer
+---@param x? integer
+---@param y? integer
 function Widget:set_position(x, y)
-  self.position.x = x + self.border.width
-  self.position.y = y + self.border.width
+  if x then self.position.x = x + self.border.width end
+  if y then self.position.y = y + self.border.width end
 
   if self.parent then
-    self.position.rx = x
-    self.position.ry = y
-
     -- add offset to properly scroll
     local ox, oy = self.parent:get_content_offset()
-    self.position.x = ox + self.position.x
-    self.position.y = oy + self.position.y
+
+    if x then
+      self.position.rx = x
+      self.position.x = ox + self.position.x
+    end
+
+    if y then
+      self.position.ry = y
+      self.position.y = oy + self.position.y
+    end
   end
 
-  self.prev_position.x = self.position.x
-  self.prev_position.y = self.position.y
-
-  for _, child in pairs(self.childs) do
-    child:set_position(child.position.rx, child.position.ry)
+  if x or y then
+    for _, child in pairs(self.childs) do
+      child:set_position(child.position.rx, child.position.ry)
+    end
   end
 end
 
@@ -522,13 +552,13 @@ function Widget:mouse_on_top(x, y)
   return
     self.visible
     and
-    x - self.border.width >= self.position.x
+    x >= self.position.x - self.border.width
     and
-    x - self.border.width <= self.position.x + self:get_width()
+    x <= self.position.x - self.border.width + self:get_width()
     and
-    y - self.border.width >= self.position.y
+    y >= self.position.y - self.border.width
     and
-    y - self.border.width <= self.position.y + self:get_height()
+    y <= self.position.y - self.border.width + self:get_height()
 end
 
 ---Mark a widget as having focus.
@@ -880,6 +910,7 @@ function Widget:on_mouse_moved(x, y, dx, dy)
   end
 
   if not self.child_active and self.mouse_is_pressed and self.draggable then
+    system.set_cursor("hand")
     self:drag(x, y)
     self.dragged = true
     return true
@@ -936,7 +967,7 @@ end
 ---any neccesary changes in sizes, padding, etc...
 ---@param new_scale number
 ---@param prev_scale number
-function Widget:rescale(new_scale, prev_scale) end
+function Widget:on_rescale(new_scale, prev_scale) end
 
 ---If visible execute the widget calculations and returns true.
 ---@return boolean
@@ -950,12 +981,12 @@ function Widget:update()
       or
       (font_type == "table" and not self.font.container)
     then
-      self.font = self.font:set_size(
+      self.font:set_size(
         self.font:get_size() * (SCALE / self.current_scale)
       )
     end
     for _, child in pairs(self.childs) do
-      child:rescale(SCALE, self.current_scale)
+      child:on_rescale(SCALE, self.current_scale)
     end
     self.current_scale = SCALE
   end

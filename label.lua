@@ -22,12 +22,12 @@ function Label:new(parent, label)
   self:set_label(label or "")
 end
 
----@param width integer
----@param height integer
+---@param width? integer
+---@param height? integer
 function Label:set_size(width, height)
   Label.super.set_size(self, width, height)
-  self.custom_size.x = width
-  self.custom_size.y = height
+  self.custom_size.x = self.size.x
+  self.custom_size.y = self.size.y
 end
 
 ---Set the label text and recalculates the widget size.

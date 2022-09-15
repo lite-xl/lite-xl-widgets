@@ -8,6 +8,9 @@ local style = require "core.style"
 local Widget = require "widget"
 local Button = require "widget.button"
 
+local HSPACING = 2
+local VSPACING = 2
+
 ---Represents a notebook pane
 ---@class widget.notebook.pane
 ---@field public name string
@@ -43,15 +46,15 @@ function NoteBook:add_pane(name, label)
   tab.border.width = 0
 
   if #self.panes > 0 then
-    tab:set_position(self.panes[#self.panes].tab:get_right() + 2, 0)
+    tab:set_position(self.panes[#self.panes].tab:get_right() + HSPACING, 0)
   end
 
   local container = Widget(self)
   container.scrollable = true
-  container:set_position(0, tab:get_bottom() + 4)
+  container:set_position(0, tab:get_bottom() + VSPACING)
   container:set_size(
     self:get_width(),
-    self:get_height() - tab:get_height() - 4
+    self:get_height() - tab:get_height() - VSPACING
   )
 
   local pane = {
@@ -112,7 +115,7 @@ end
 
 ---Set or remove the icon for the given pane.
 ---@param name string
----@param icon? renderer.color|nil
+---@param icon? string|nil
 ---@param color? renderer.color|nil
 ---@param hover_color? renderer.color|nil
 function NoteBook:set_pane_icon(name, icon, color, hover_color)
@@ -132,7 +135,7 @@ function NoteBook:update()
   for pos, pane in pairs(self.panes) do
     if pos ~= 1 then
       pane.tab:set_position(
-        self.panes[pos-1].tab:get_right() + 2, 0
+        self.panes[pos-1].tab:get_right() + HSPACING, 0
       )
     else
       pane.tab:set_position(0, 0)
@@ -152,14 +155,11 @@ function NoteBook:update()
     self.active_pane.tab.foreground_color = style.accent
 
     self.active_pane.container:set_position(
-      0, self.active_pane.tab:get_bottom() + 4
+      0, self.active_pane.tab:get_bottom() + VSPACING
     )
     self.active_pane.container:set_size(
-      self:get_width() - (self.active_pane.container.border.width * 2),
-      self:get_height()
-        - self.active_pane.tab:get_height()
-        - (self.active_pane.container.border.width * 2)
-        - 4
+      self:get_width(),
+      self:get_height() - self.active_pane.tab:get_height() - VSPACING
     )
     self.active_pane.container.border.color = style.divider
   end
@@ -175,7 +175,7 @@ function NoteBook:draw()
     local x = self.active_pane.tab.position.x
     local y = self.active_pane.tab.position.y + self.active_pane.tab:get_bottom()
     local w = self.active_pane.tab:get_width()
-    renderer.draw_rect(x, y, w, 2, style.caret)
+    renderer.draw_rect(x, y, w, HSPACING, style.caret)
   end
 
   return true

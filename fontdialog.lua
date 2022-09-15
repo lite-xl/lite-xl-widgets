@@ -321,10 +321,7 @@ function FontDialog:update()
 
   self.line:set_width(self.size.x - style.padding.x)
 
-  self.preview:set_size(
-    self.size.x - style.padding.x - (self.preview.border.width * 2),
-    self.preview.size.y
-  )
+  self.preview:set_size(self.size.x - style.padding.x)
 
   return true
 end

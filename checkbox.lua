@@ -25,7 +25,7 @@ end
 function CheckBox:set_label(text)
   CheckBox.super.set_label(self, text)
 
-  local bx, by, bw, bh = self:get_box_rect()
+  local _, _, bw, _ = self:get_box_rect()
 
   local font = self:get_font()
 

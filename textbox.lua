@@ -109,7 +109,7 @@ end
 ---@class widget.textbox : widget
 ---@field public textview widget.textbox.TextView
 ---@field public placeholder string
----@field private placeholder_active string
+---@field private placeholder_active boolean
 local TextBox = Widget:extend()
 
 function TextBox:new(parent, text, placeholder)

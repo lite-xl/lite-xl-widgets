@@ -106,9 +106,8 @@ function Dialog:update()
   )
 
   self.panel:set_size(
-    self.size.x - (self.panel.border.width * 2),
+    self.size.x,
     self.size.y - self.title.size.y - style.padding.y
-      - (self.panel.border.width * 2)
   )
 
   return true

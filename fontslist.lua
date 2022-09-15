@@ -188,7 +188,7 @@ function FontsList:update()
   self.list:set_position(0, 0)
 
   self.list:set_size(
-    self.size.x - (self.list.border.width * 2),
+    self.size.x,
     self.size.y - self.add:get_height() - (style.padding.y * 2)
   )
 

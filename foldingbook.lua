@@ -76,7 +76,7 @@ function FoldingBook:add_pane(name, label)
 end
 
 ---@param name string
----@return widget.foldingbook.pane
+---@return widget.foldingbook.pane | nil
 function FoldingBook:get_pane(name)
   for _, pane in pairs(self.panes) do
     if pane.name == name then
@@ -129,7 +129,7 @@ end
 
 ---Set or remove the icon for the given pane.
 ---@param name string
----@param icon? renderer.color|nil
+---@param icon string
 ---@param color? renderer.color|nil
 ---@param hover_color? renderer.color|nil
 function FoldingBook:set_pane_icon(name, icon, color, hover_color)
@@ -164,7 +164,7 @@ function FoldingBook:update()
     pane.tab:set_position(tx, ty)
 
     cy = pane.tab:get_bottom() + 4
-    cw = self:get_width() - (pane.container.border.width * 2)
+    cw = self:get_width()
     if #pane.container.childs > 0 then
       ch = pane.container:get_real_height() + 10
     end
@@ -196,7 +196,7 @@ function FoldingBook:draw()
   for _, pane in ipairs(self.panes) do
     local x = pane.tab.position.x
     local y = pane.tab.position.y + pane.tab:get_height()
-    local w = self:get_width() - (pane.container.border.width * 2)
+    local w = self:get_width()
     renderer.draw_rect(x, y, w, 2, style.selection)
   end
 

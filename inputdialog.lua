@@ -68,7 +68,7 @@ function InputDialog:update()
   self.size.y = self:get_real_height() + (style.padding.y / 2)
 
   self.text:set_size(
-    self.size.x - style.padding.x - (self.text.border.width * 2),
+    self.size.x - style.padding.x,
     self.text:get_real_height()
   )
 
