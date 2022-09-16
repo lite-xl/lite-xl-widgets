@@ -7,6 +7,7 @@ local Label = require "widget.label"
 ---@class widget.filepicker : widget
 ---@field public pick_mode integer
 ---@field public filters table<integer,string>
+---@field private path string
 ---@field private file widget.label
 ---@field private textbox widget.textbox
 ---@field private button widget.button
@@ -24,16 +25,30 @@ FilePicker.mode = {
   DIRECTORY_EXISTS = 8
 }
 
+---@param text string
 local function suggest_directory(text)
   text = common.home_expand(text)
   return common.home_encode_list(common.dir_path_suggest(text))
 end
 
+---@param path string
 local function check_directory_path(path)
   local abs_path = system.absolute_path(path)
   local info = abs_path and system.get_file_info(abs_path)
   if not info or info.type ~= 'dir' then return nil end
   return abs_path
+end
+
+---@param str string
+---@param find string
+---@param replace string
+local function str_replace(str, find, replace)
+  local start, ending = str:find(find, 1, true)
+  if start == 1 then
+    return replace .. str:sub(ending + 1)
+  else
+    return str:sub(1, start - 1) .. replace .. str:sub(ending + 1)
+  end
 end
 
 ---@alias widget.filepicker.modes
@@ -54,7 +69,7 @@ function FilePicker:new(parent, path)
   self.border.width = 0
   self.pick_mode = FilePicker.mode.FILE
 
-  self.file = Label(self, path or "")
+  self.file = Label(self, "")
   self.file.clickable = true
   self.file:set_border_width(1)
   function self.file:on_click(button)
@@ -82,8 +97,13 @@ function FilePicker:new(parent, path)
     label_width + self.button:get_width(),
     math.max(self.file:get_height(), self.button:get_height())
   )
+
+  self:set_path(path)
 end
 
+---Set the filepicker size
+---@param width? number
+---@param height? number
 function FilePicker:set_size(width, height)
   FilePicker.super.set_size(self, width, height)
 
@@ -98,14 +118,18 @@ function FilePicker:set_size(width, height)
   self.size.y = self.button:get_height()
 end
 
+---Add a lua pattern to the filters list
+---@param pattern string
 function FilePicker:add_filter(pattern)
   table.insert(self.filters, pattern)
 end
 
+---Clear the filters list
 function FilePicker:clear_filters()
   self.filters = {}
 end
 
+---Set the operation mode for the file picker.
 ---@param mode widget.filepicker.modes | string
 function FilePicker:set_mode(mode)
   if type(mode) == "string" then
@@ -118,16 +142,25 @@ function FilePicker:set_mode(mode)
 end
 
 ---Set the full path including directory and filename.
----@param path string
+---@param path? string
 function FilePicker:set_path(path)
-  self.file.label = path or ""
+  if path then
+    self.path = path or ""
+    self.file.label = path ~= "" and
+      common.relative_path(core.project_dir, path)
+      or
+      ""
+  else
+    self.path = ""
+    self.file.label = ""
+  end
 end
 
 ---Get the full path including directory and filename.
 ---@return string | nil
 function FilePicker:get_path()
-  if self.file.label ~= "" then
-    return self.file.label
+  if self.path ~= "" then
+    return self.path
   end
   return nil
 end
@@ -135,23 +168,23 @@ end
 ---Set the filename part only.
 ---@param name string
 function FilePicker:set_filename(name)
-  local dir_part = common.dirname(self.file.label)
+  local dir_part = common.dirname(self.path)
   if dir_part then
-    self.file.label = dir_part .. "/" .. name
+    self:set_path(dir_part .. "/" .. name)
   else
-    self.file.label = name
+    self:set_path(name)
   end
 end
 
 ---Get the filename part only.
 ---@return string | nil
 function FilePicker:get_filename()
-  local dir_part = common.dirname(self.file.label)
+  local dir_part = common.dirname(self.path)
   if dir_part then
-    local filename = self.file.label:gsub(dir_part .. "/", "", 1)
+    local filename = str_replace(self.path, dir_part .. "/", "")
     return filename
-  elseif self.file.label ~= "" then
-    return self.file.label
+  elseif self.path ~= "" then
+    return self.path
   end
   return nil
 end
@@ -161,26 +194,27 @@ end
 function FilePicker:set_directory(dir)
   local filename = self:get_filename()
   if filename then
-    self.file.label = dir:gsub("[\\/]$", "") .. "/" .. filename
+    self:set_path(dir:gsub("[\\/]$", "") .. "/" .. filename)
   else
-    self.file.label = dir:gsub("[\\/]$", "")
+    self:set_path(dir:gsub("[\\/]$", ""))
   end
 end
 
 ---Get the directory part only.
 ---@return string | nil
 function FilePicker:get_directory()
-  if self.file.label ~= "" then
-    local dir_part = common.dirname(self.file.label)
+  if self.path ~= "" then
+    local dir_part = common.dirname(self.path)
     if dir_part then return dir_part end
   end
   return nil
 end
 
 ---Filter a list of directories by applying currently set filters.
+---@param self widget.filepicker
 ---@param list table<integer, string>
 ---@return table<integer,string>
-function FilePicker:filter(list)
+local function filter(self, list)
   if #self.filters > 0 then
     local new_list = {}
     for _, value in ipairs(list) do
@@ -206,14 +240,25 @@ end
 ---@param self widget.filepicker
 local function show_file_picker(self)
   core.command_view:enter("Choose File", {
-    text = self.file.label,
+    text = self.path,
     submit = function(text)
-      local filename = system.absolute_path(common.home_expand(text))
-      self.file:set_label(filename or text)
-      self:on_change(filename or (text ~= "" and text or nil))
+      ---@type string
+      local filename = text
+      local dirname = common.dirname(common.home_expand(text))
+      if dirname then
+        filename = common.home_expand(text)
+        filename = system.absolute_path(dirname)
+          .. "/"
+          .. str_replace(filename, dirname .. "/", "")
+      elseif filename ~= "" then
+        filename = core.project_dir .. "/" .. filename
+      end
+      self:set_path(filename)
+      self:on_change(filename ~= "" and filename or nil)
     end,
     suggest = function (text)
-      return self:filter(
+      return filter(
+        self,
         common.home_encode_list(common.path_suggest(common.home_expand(text)))
       )
     end,
@@ -251,17 +296,17 @@ end
 
 ---@param self widget.filepicker
 local function show_dir_picker(self)
-  local current = self.file.label
+  local current = self.path
   core.command_view:enter("Choose Directory", {
     text = current,
     submit = function(text)
       local path = common.home_expand(text)
       local abs_path = check_directory_path(path)
-      self.file:set_label(abs_path or text)
+      self:set_path(abs_path or text)
       self:on_change(abs_path or (text ~= "" and text or nil))
     end,
     suggest = function(text)
-      return self:filter(suggest_directory(text))
+      return filter(self, suggest_directory(text))
     end,
     validate = function(text)
       if #self.filters > 0 and text ~= "" and not common.match_pattern(text, self.filters) then
