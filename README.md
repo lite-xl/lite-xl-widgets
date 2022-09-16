@@ -22,6 +22,7 @@ Components currently provided by this plugin are:
 * [Button](button.lua)
 * [CheckBox](checkbox.lua)
 * [Dialog](dialog.lua)
+* [FilePicker](filepicker.lua)
 * [FoldingBook](foldingbook.lua)
 * [FontDialog](fontdialog.lua)
 * [FontsList](fontslist.lua)
