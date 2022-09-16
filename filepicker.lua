@@ -1,5 +1,6 @@
 local core = require "core"
 local common = require "core.common"
+local style = require "core.style"
 local Widget = require "widget"
 local Button = require "widget.button"
 local Label = require "widget.label"
@@ -76,6 +77,14 @@ function FilePicker:new(parent, path)
     if button == "left" then
       this:show_picker()
     end
+  end
+  function self.file:on_mouse_enter(...)
+    Label.super.on_mouse_enter(self, ...)
+    self.border.color = style.caret
+  end
+  function self.file:on_mouse_leave(...)
+    Label.super.on_mouse_leave(self, ...)
+    self.border.color = style.text
   end
 
   self.button = Button(self, "")
