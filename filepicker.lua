@@ -15,6 +15,7 @@ local Label = require "widget.label"
 local FilePicker = Widget:extend()
 
 ---Operation modes for the file picker.
+---@type table<string,integer>
 FilePicker.mode = {
   ---Opens file browser the selected file does not has to exist.
   FILE = 1,
@@ -155,10 +156,14 @@ end
 function FilePicker:set_path(path)
   if path then
     self.path = path or ""
-    self.file.label = path ~= "" and
-      common.relative_path(core.project_dir, path)
-      or
-      ""
+    if common.path_belongs_to(path, core.project_dir) then
+      self.file.label = path ~= "" and
+        common.relative_path(core.project_dir, path)
+        or
+        ""
+    else
+      self.file.label = path
+    end
   else
     self.path = ""
     self.file.label = ""
@@ -172,6 +177,20 @@ function FilePicker:get_path()
     return self.path
   end
   return nil
+end
+
+---Get the full path relative to current project dir or absolute if it doesn't
+---belongs to the current project directory.
+---@return string
+function FilePicker:get_relative_path()
+  if
+    self.path ~= ""
+    and
+    common.path_belongs_to(self.path, core.project_dir)
+  then
+    return common.relative_path(core.project_dir, self.path)
+  end
+  return self.path or ""
 end
 
 ---Set the filename part only.
@@ -230,9 +249,9 @@ local function filter(self, list)
       if common.match_pattern(value, self.filters) then
         table.insert(new_list, value)
       elseif
-        (self.pick_mode & FilePicker.mode.FILE) > 0
+        self.pick_mode == FilePicker.mode.FILE
         or
-        (self.pick_mode & FilePicker.mode.FILE_EXISTS) > 0
+        self.pick_mode == FilePicker.mode.FILE_EXISTS
       then
         local path = common.home_expand(value)
         local abs_path = check_directory_path(path)
@@ -249,7 +268,7 @@ end
 ---@param self widget.filepicker
 local function show_file_picker(self)
   core.command_view:enter("Choose File", {
-    text = self.path,
+    text = self:get_relative_path(),
     submit = function(text)
       ---@type string
       local filename = text
@@ -285,7 +304,7 @@ local function show_file_picker(self)
         core.error("Cannot open %s, is a folder", text)
         return false
       end
-      if (self.pick_mode & FilePicker.mode.FILE_EXISTS) > 0 then
+      if self.pick_mode == FilePicker.mode.FILE_EXISTS then
         if not path_stat then
           core.error("Cannot open file %s: %s", text, err)
           return false
@@ -305,9 +324,8 @@ end
 
 ---@param self widget.filepicker
 local function show_dir_picker(self)
-  local current = self.path
   core.command_view:enter("Choose Directory", {
-    text = current,
+    text = self:get_relative_path(),
     submit = function(text)
       local path = common.home_expand(text)
       local abs_path = check_directory_path(path)
@@ -325,7 +343,7 @@ local function show_dir_picker(self)
         )
         return false
       end
-      if (self.pick_mode & FilePicker.mode.DIRECTORY_EXISTS) > 0 then
+      if self.pick_mode == FilePicker.mode.DIRECTORY_EXISTS then
         local path = common.home_expand(text)
         local abs_path = check_directory_path(path)
         if not abs_path then
@@ -338,11 +356,13 @@ local function show_dir_picker(self)
   })
 end
 
+---Show the command view file or directory browser depending on the
+---current file picker mode.
 function FilePicker:show_picker()
   if
-    (self.pick_mode & FilePicker.mode.FILE) > 0
+    self.pick_mode == FilePicker.mode.FILE
     or
-    (self.pick_mode & FilePicker.mode.FILE_EXISTS) > 0
+    self.pick_mode == FilePicker.mode.FILE_EXISTS
   then
     show_file_picker(self)
   else
