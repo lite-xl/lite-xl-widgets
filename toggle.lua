@@ -28,6 +28,8 @@ local Toggle = Widget:extend()
 function Toggle:new(parent, label, enable)
   Toggle.super.new(self, parent)
 
+  self.type_name = "widget.toggle"
+
   self.enabled = enable or false
   self.label = label or ""
 

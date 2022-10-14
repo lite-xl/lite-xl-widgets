@@ -21,6 +21,8 @@ local Dialog = Widget:extend()
 function Dialog:new(title)
   Dialog.super.new(self)
 
+  self.type_name = "widget.dialog"
+
   self.draggable = true
   self.scrollable = false
 

@@ -15,6 +15,7 @@ local Label = Widget:extend()
 ---@param label string
 function Label:new(parent, label)
   Label.super.new(self, parent)
+  self.type_name = "widget.label"
   self.clickable = false
   self.border.width = 0
   self.custom_size = {x = 0, y = 0}

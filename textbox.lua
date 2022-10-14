@@ -3,7 +3,6 @@
 --
 
 local core = require "core"
-local command = require "core.command"
 local style = require "core.style"
 local Doc = require "core.doc"
 local DocView = require "core.docview"
@@ -42,10 +41,6 @@ end
 
 function TextView:get_scrollable_size()
   return 0
-end
-
-function TextView:scroll_to_make_visible()
-  -- no-op function to disable this functionality
 end
 
 function TextView:get_text()
@@ -89,13 +84,11 @@ function TextView:draw()
   local lh = self:get_line_height()
 
   local x, y = self:get_line_screen_position(minline)
-  local gw, gpad = self:get_gutter_width()
   for i = minline, maxline do
-    self:draw_line_gutter(i, self.position.x, y, gpad and gw - gpad or gw)
+    self:draw_line_gutter(i, self.position.x, y)
     y = y + lh
   end
 
-  local pos = self.position
   x, y = self:get_line_screen_position(minline)
   for i = minline, maxline do
     self:draw_line_body(i, x, y)
@@ -114,6 +107,7 @@ local TextBox = Widget:extend()
 
 function TextBox:new(parent, text, placeholder)
   TextBox.super.new(self, parent)
+  self.type_name = "widget.textbox"
   self.textview = TextView()
   self.textview.name = parent.name
   self.size.x = 200 + (style.padding.x * 2)
@@ -125,6 +119,7 @@ function TextBox:new(parent, text, placeholder)
   self.input_text = true
   self.cursor = "ibeam"
   self.active = false
+  self.drag_select = false
 
   if text ~= "" then
     self.textview:set_text(text, select)
@@ -135,7 +130,7 @@ function TextBox:new(parent, text, placeholder)
 
   local this = self
 
-  function self.textview.doc:on_text_change(type)
+  function self.textview.doc:on_text_change()
     this:on_change(this:get_text())
   end
 
@@ -154,8 +149,7 @@ function TextBox:new(parent, text, placeholder)
 end
 
 ---@param width integer
----@param height? integer Ignored on the textbox
-function TextBox:set_size(width, height)
+function TextBox:set_size(width)
   TextBox.super.set_size(
     self,
     width,
@@ -188,7 +182,9 @@ end
 function TextBox:on_mouse_pressed(button, x, y, clicks)
   if TextBox.super.on_mouse_pressed(self, button, x, y, clicks) then
     self.textview:on_mouse_pressed(button, x, y, clicks)
-    command.perform("doc:set-cursor", x, y)
+    local line, col = self.textview:resolve_screen_position(x, y)
+    self.drag_select = { line = line, col = col }
+    self.textview.doc:set_selection(line, col, line, col)
     if core.active_view ~= self.textview then
       self.textview:on_mouse_released(button, x, y)
     end
@@ -199,6 +195,7 @@ end
 
 function TextBox:on_mouse_released(button, x, y)
   if TextBox.super.on_mouse_released(self, button, x, y) then
+    self.drag_select = false
     self.textview:on_mouse_released(button, x, y)
     return true
   end
@@ -206,10 +203,15 @@ function TextBox:on_mouse_released(button, x, y)
 end
 
 function TextBox:on_mouse_moved(x, y, dx, dy)
+  if self.drag_select then
+    local line, col = self.textview:resolve_screen_position(x, y)
+    self.textview.doc:set_selection(
+      self.drag_select.line, self.drag_select.col, line, col
+    )
+  end
   if TextBox.super.on_mouse_moved(self, x, y, dx, dy) then
     if self.active or core.active_view == self.textview then
       self.textview:on_mouse_moved(x, y, dx, dy)
-      system.set_cursor("ibeam")
     end
     return true
   end
@@ -223,7 +225,7 @@ function TextBox:activate()
     self.placeholder_active = false
   end
   self.active = true
-  system.set_cursor("ibeam")
+  core.request_cursor("ibeam")
 end
 
 function TextBox:deactivate()
@@ -233,7 +235,7 @@ function TextBox:deactivate()
     self.placeholder_active = true
   end
   self.active = false
-  system.set_cursor("arrow")
+  core.request_cursor("arrow")
 end
 
 function TextBox:on_text_input(text)
@@ -252,6 +254,14 @@ function TextBox:on_text_change(action, ...) end
 
 function TextBox:update()
   if not TextBox.super.update(self) then return false end
+
+  if
+    self.drag_select
+    or
+    (self.active and self:mouse_on_top(self.mouse.x, self.mouse.y))
+  then
+    core.request_cursor("ibeam")
+  end
 
   self.textview:update()
   self.size.y = self:get_font():get_height() + (style.padding.y * 2)

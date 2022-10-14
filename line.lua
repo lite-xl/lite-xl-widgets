@@ -18,6 +18,7 @@ local Line = Widget:extend()
 ---@param padding number
 function Line:new(parent, thickness, padding)
   Line.super.new(self, parent)
+  self.type_name = "widget.line"
   self.size.y = thickness or 2
   self.custom_width = nil
   self.border.width = 0

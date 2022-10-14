@@ -21,6 +21,8 @@ local ItemsList = Widget:extend()
 function ItemsList:new(parent)
   ItemsList.super.new(self, parent)
 
+  self.type_name = "widget.itemslist"
+
   self.border.width = 0
 
   self.dialog = false

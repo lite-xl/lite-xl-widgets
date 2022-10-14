@@ -21,6 +21,7 @@ local ProgressBar = Widget:extend()
 ---@param width number
 function ProgressBar:new(parent, percent, width)
   ProgressBar.super.new(self, parent)
+  self.type_name = "widget.progressbar"
   self.clickable = false
   self.percent = percent or 0
   self.percent_width = 0

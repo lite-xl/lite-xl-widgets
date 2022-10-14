@@ -16,6 +16,7 @@ local CheckBox = Widget:extend()
 ---@param label string
 function CheckBox:new(parent, label)
   CheckBox.super.new(self, parent)
+  self.type_name = "widget.checkbox"
   self.checked = false
   self:set_label(label or "")
 end

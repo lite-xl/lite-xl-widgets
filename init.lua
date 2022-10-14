@@ -7,6 +7,7 @@
 local core = require "core"
 local config = require "core.config"
 local style = require "core.style"
+local keymap = require "core.keymap"
 local View = require "core.view"
 local RootView = require "core.rootview"
 
@@ -58,6 +59,7 @@ local WidgetFontReference = {}
 ---@field public foreground_color renderer.color
 ---@field public background_color renderer.color
 ---@field public render_background boolean
+---@field public type_name string
 ---@field private visible boolean
 ---@field private has_focus boolean
 ---@field private dragged boolean
@@ -71,7 +73,7 @@ local WidgetFontReference = {}
 ---@field private mouse_is_pressed boolean
 ---@field private mouse_is_hovering boolean
 ---@field private mouse_pressed_outside boolean
----@field private was_scrolling boolean
+---@field private is_scrolling boolean
 local Widget = View:extend()
 
 ---Indicates on a widget.styledtext that a new line follows.
@@ -93,6 +95,7 @@ local floating_widgets = {}
 function Widget:new(parent, floating)
   Widget.super.new(self)
 
+  self.type_name = "widget"
   self.parent = parent
   self.name = "---" -- defaults to the application name
   if type(floating) == "boolean" then
@@ -123,7 +126,7 @@ function Widget:new(parent, floating)
   self.textview = nil
   self.mouse = {x = 0, y = 0}
   self.prev_size = {x = 0, y = 0}
-  self.was_scrolling = false
+  self.is_scrolling = false
 
   self.mouse_is_pressed = false
   self.mouse_is_hovering = false
@@ -141,6 +144,11 @@ function Widget:new(parent, floating)
   end
 
   self:set_position(0, 0)
+end
+
+---Useful for debugging.
+function Widget:__tostring()
+  return self.type_name
 end
 
 ---Add a child widget, automatically assign a zindex if non set and sorts
@@ -590,12 +598,12 @@ end
 function Widget:centered()
   local w, h = system.get_window_size();
   if self.parent then
-    w = self.parent.size.x - (self.parent.border.width*2)
-    h = self.parent.size.y - (self.parent.border.width*2)
+    w = self.parent:get_width()
+    h = self.parent:get_height()
   end
   self:set_position(
-    (w / 2) - (self.size.x / 2),
-    (h / 2) - (self.size.y / 2)
+    (w / 2) - (self:get_width() / 2),
+    (h / 2) - (self:get_height() / 2)
   )
 end
 
@@ -634,11 +642,18 @@ function Widget:swap_active_child(child)
   end
 end
 
----Calculates the scrollable size taking into account the bottom most
+---Calculates the y scrollable size taking into account the bottom most
 ---widget or the size of the widget it self if greater.
 ---@return number
 function Widget:get_scrollable_size()
   return math.max(self.size.y, self:get_real_height())
+end
+
+---Calculates the x scrollable size taking into account the right most
+---widget or the size of the widget it self if greater.
+---@return number
+function Widget:get_h_scrollable_size()
+  return math.max(self.size.x, self:get_real_width())
 end
 
 ---The name that is displayed on lite-xl tabs.
@@ -692,6 +707,18 @@ end
 function Widget:on_mouse_pressed(button, x, y, clicks)
   if not self.visible then return false end
 
+  if Widget.super.on_mouse_pressed(self, button, x, y, clicks) then
+    local parent = self.parent
+    while parent do
+      -- propagate to parents so if mouse is not on top still
+      -- reach the childrens when the mouse is released
+      parent.is_scrolling = true
+      parent = parent.parent
+    end
+    self.is_scrolling = true
+    return true
+  end
+
   for _, child in pairs(self.childs) do
     if child:mouse_on_top(x, y) and child.clickable then
       child:on_mouse_pressed(button, x, y, clicks)
@@ -700,18 +727,6 @@ function Widget:on_mouse_pressed(button, x, y, clicks)
   end
 
   if self:mouse_on_top(x, y) then
-    Widget.super.on_mouse_pressed(self, button, x, y, clicks)
-
-    if self.hovered_scrollbar then
-      if self.parent then
-        -- propagate to parents so if mouse is not on top still
-        -- reach the childrens when the mouse is released
-        self.parent.was_scrolling = true
-      end
-      self.was_scrolling = true
-      return true
-    end
-
     self.mouse_is_pressed = true
 
     if self.parent then
@@ -742,7 +757,28 @@ end
 function Widget:on_mouse_released(button, x, y)
   if not self.visible then return false end
 
+  Widget.super.on_mouse_released(self, button, x, y)
+
+  if self.is_scrolling then
+    self.is_scrolling = false
+    local parent = self.parent
+    while parent do
+      parent.is_scrolling = false
+      parent = parent.parent
+    end
+    for _, child in pairs(self.childs) do
+      if child.is_scrolling then
+        child:on_mouse_released(button, x, y)
+      end
+    end
+    return true
+  end
+
   self:swap_active_child()
+
+  if self.child_active then
+    self.child_active:on_mouse_released(button, x, y)
+  end
 
   if not self.dragged then
     for _, child in pairs(self.childs) do
@@ -750,13 +786,8 @@ function Widget:on_mouse_released(button, x, y)
       if
         mouse_on_top
         or
-        child.was_scrolling
-        or
         child.mouse_is_pressed
       then
-        -- if child ~= self.child_active then
-        --   self:swap_active_child()
-        -- end
         child:on_mouse_released(button, x, y)
         if child.input_text then
           self:swap_active_child(child)
@@ -769,27 +800,13 @@ function Widget:on_mouse_released(button, x, y)
     end
   end
 
-  if self.was_scrolling then
-    Widget.super.on_mouse_released(self, button, x, y)
-    self.mouse_is_pressed = false
-    self.was_scrolling = false
-    if self.parent then
-      self.parent.was_scrolling = false
-    end
-    return false
-  end
-
   if
-    not self:mouse_on_top(x, y)
+    not self.dragged
     and
     not self.mouse_is_pressed
-    and
-    not self.was_scrolling
   then
     return false
   end
-
-  Widget.super.on_mouse_released(self, button, x, y)
 
   if self.mouse_is_pressed then
     if self:mouse_on_top(x, y) then
@@ -839,9 +856,27 @@ function Widget:deactivate() end
 function Widget:on_mouse_moved(x, y, dx, dy)
   if not self.visible then return false end
 
+  Widget.super.on_mouse_moved(self, x, y, dx, dy)
+
+  if self.is_scrolling then
+    if not self:scrollbar_dragging() then
+      for _, child in pairs(self.childs) do
+        if child.is_scrolling then
+          child:on_mouse_moved(x, y, dx, dy)
+          break
+        end
+      end
+    end
+    return true
+  end
+
   -- store latest mouse coordinates for usage on the on_mouse_wheel event.
   self.mouse.x = x
   self.mouse.y = y
+
+  if self.child_active then
+    self.child_active:on_mouse_moved(x, y, dx, dy)
+  end
 
   if not self.dragged then
     local hovered = nil
@@ -849,7 +884,7 @@ function Widget:on_mouse_moved(x, y, dx, dy)
       if
         not hovered
         and
-        (child:mouse_on_top(x, y) or child.was_scrolling or child.mouse_is_pressed)
+        (child:mouse_on_top(x, y) or child.mouse_is_pressed)
       then
         hovered = child
       elseif child.mouse_is_hovering then
@@ -874,20 +909,12 @@ function Widget:on_mouse_moved(x, y, dx, dy)
   end
 
   if
-    self:mouse_on_top(x, y)
-    or
-    self.was_scrolling
-    or
-    self.mouse_is_pressed
-    or
-    not self.parent
+    not self:mouse_on_top(x, y)
+    and
+    not self.mouse_is_pressed
+    and
+    not self.mouse_is_hovering
   then
-    Widget.super.on_mouse_moved(self, x, y, dx, dy)
-    if self.dragging_scrollbar then
-      self.dragged = true
-      return true
-    end
-  else
     return false
   end
 
@@ -938,7 +965,7 @@ function Widget:on_mouse_leave(x, y, dx, dy)
   end
 end
 
-function Widget:on_mouse_wheel(y)
+function Widget:on_mouse_wheel(y, x)
   if
     not self.visible
     or
@@ -949,14 +976,23 @@ function Widget:on_mouse_wheel(y)
 
   for _, child in pairs(self.childs) do
     if child:mouse_on_top(self.mouse.x, self.mouse.y) then
-      if child:on_mouse_wheel(y) then
+      if child:on_mouse_wheel(y, x) then
         return true
       end
     end
   end
 
   if self.scrollable then
-    self.scroll.to.y = self.scroll.to.y + y * -config.mouse_wheel_scroll
+    if keymap.modkeys["shift"] then
+      x = y
+      y = 0
+    end
+    if y and y ~= 0 then
+      self.scroll.to.y = self.scroll.to.y + y * -config.mouse_wheel_scroll
+    end
+    if x and x ~= 0 then
+      self.scroll.to.x = self.scroll.to.x + x * -config.mouse_wheel_scroll
+    end
     return true
   end
 
@@ -1007,12 +1043,6 @@ function Widget:draw_scrollbar()
   if self.scrollable then
     Widget.super.draw_scrollbar(self)
   end
-
-  for i=#self.childs, 1, -1 do
-    if self.childs[i].visible and self.childs[i].scrollable then
-      self.childs[i]:draw_scrollbar()
-    end
-  end
 end
 
 ---If visible draw the widget and returns true.
@@ -1058,11 +1088,9 @@ end
 
 ---Recursively destroy all childs from the widget.
 function Widget:destroy_childs()
-  ::remove_child::
-  for idx, child in ipairs(self.childs) do
-    child:destroy_childs()
-    table.remove(self.childs, idx)
-    goto remove_child
+  for _=1, #self.childs do
+    self.childs[1]:destroy_childs()
+    table.remove(self.childs, 1)
   end
 end
 
@@ -1157,7 +1185,13 @@ function Widget.override_rootview()
           or
           (moved or not widget:on_mouse_moved(x, y, dx, dy))
         then
-            if not widget.child_active and widget.outside_view then
+            if
+              not widget.is_scrolling
+              and
+              not widget.child_active
+              and
+              widget.outside_view
+            then
               core.set_active_view(widget.outside_view)
               widget.outside_view = nil
             end
@@ -1177,14 +1211,14 @@ function Widget.override_rootview()
     end
   end
 
-  function RootView:on_mouse_wheel(y)
+  function RootView:on_mouse_wheel(y, x)
     for i=#floating_widgets, 1, -1 do
       local widget = floating_widgets[i]
-      if widget.defer_draw and widget:on_mouse_wheel(y) then
+      if widget.defer_draw and widget:on_mouse_wheel(y, x) then
         return true
       end
     end
-    return root_view_on_mouse_wheel(self, y)
+    return root_view_on_mouse_wheel(self, y, x)
   end
 
   function RootView:on_file_dropped(filename, x, y)

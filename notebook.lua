@@ -27,6 +27,7 @@ local NoteBook = Widget:extend()
 ---@param parent widget
 function NoteBook:new(parent)
   NoteBook.super.new(self, parent)
+  self.type_name = "widget.notebook"
   self.panes = {}
   self.active_pane = nil
 end

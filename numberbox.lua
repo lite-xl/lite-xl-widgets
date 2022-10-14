@@ -27,6 +27,8 @@ local NumberBox = Widget:extend()
 function NumberBox:new(parent, value, min, max, step)
   NumberBox.super.new(self, parent)
 
+  self.type_name = "widget.numberbox"
+
   self.scrollable = true
 
   self:set_range(min, max)

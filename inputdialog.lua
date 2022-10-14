@@ -24,6 +24,8 @@ local InputDialog = Dialog:extend()
 function InputDialog:new(title, message, text)
   InputDialog.super.new(self, title or "Enter Value")
 
+  self.type_name = "widget.inputdialog"
+
   self.message = Label(self.panel, message)
   self.text = TextBox(self.panel, text or "")
 

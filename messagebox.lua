@@ -50,6 +50,7 @@ MessageBox.BUTTONS_YES_NO_CANCEL = 4
 ---@param icon_color renderer.color
 function MessageBox:new(parent, title, message, icon, icon_color)
   MessageBox.super.new(self, parent)
+  self.type_name = "widget.messagebox"
   self.draggable = true
   self.scrollable = true
   self.title = Label(self, "")

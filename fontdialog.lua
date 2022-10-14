@@ -45,6 +45,8 @@ function FontDialog:new(font, options)
 
   local this = self
 
+  self.type_name = "widget.fontdialog"
+
   self.preview = Label(self.panel, "No Font Selected")
   self.preview.border.width = 1
   self.preview.clickable = true

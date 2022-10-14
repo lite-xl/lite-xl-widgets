@@ -24,6 +24,7 @@ local FoldingBook = Widget:extend()
 ---@param parent widget
 function FoldingBook:new(parent)
   FoldingBook.super.new(self, parent)
+  self.type_name = "widget.foldingbook"
   self.panes = {}
   self.scrollable = true
 end

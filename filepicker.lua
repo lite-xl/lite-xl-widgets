@@ -67,6 +67,8 @@ function FilePicker:new(parent, path)
 
   local this = self
 
+  self.type_name = "widget.filepicker"
+
   self.filters = {}
   self.border.width = 0
   self.pick_mode = FilePicker.mode.FILE

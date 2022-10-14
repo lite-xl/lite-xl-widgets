@@ -25,6 +25,8 @@ local Button = Widget:extend()
 function Button:new(parent, label)
   Button.super.new(self, parent)
 
+  self.type_name = "widget.button"
+
   self.icon = {
     code = nil, color = nil, hover_color = nil
   }

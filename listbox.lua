@@ -51,6 +51,7 @@ ListBox.NEWLINE = 2
 ---@param parent widget
 function ListBox:new(parent)
   ListBox.super.new(self, parent)
+  self.type_name = "widget.listbox"
   self.scrollable = true
   self.rows = {}
   self.row_data = {}

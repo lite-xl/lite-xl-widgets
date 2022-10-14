@@ -21,6 +21,7 @@ local SelectBox = Widget:extend()
 ---@param label string
 function SelectBox:new(parent, label)
   SelectBox.super.new(self, parent)
+  self.type_name = "widget.selectbox"
   self.size.x = 200 + (style.padding.x * 2)
   self.size.y = self:get_font():get_height() + (style.padding.y * 2)
   self.list_container = Widget()
@@ -28,7 +29,6 @@ function SelectBox:new(parent, label)
     self.size.x - self.list_container.border.width,
     150
   )
-  self.list_container.border.color = style.caret
   self.list = ListBox(self.list_container)
   self.list.border.width = 0
   self.list:enable_expand(true)
@@ -75,7 +75,7 @@ end
 ---@param text string
 ---@param max_width number
 ---@param font widget.font Default is style.font
----@param overflow_chars string Default is '...'
+---@param overflow_chars? string Default is '...'
 ---@return string chopped_text
 ---@return boolean overflows True if the text overflows
 function SelectBox:text_overflow(text, max_width, font, overflow_chars)
@@ -146,7 +146,7 @@ function SelectBox:reposition_container()
   local y1 = self.position.y + self:get_height()
   local y2 = self.position.y - self.list:get_height()
 
-  local w, h = system.get_window_size()
+  local _, h = system.get_window_size()
 
   if y1 + self.list:get_height() <= h then
     self.list_container:set_position(
@@ -193,6 +193,8 @@ function SelectBox:on_click(button, x, y)
 
   if button == "left" then
     self:reposition_container()
+
+    self.list_container.border.color = style.caret
 
     self.list_container:toggle_visible()
 

@@ -29,6 +29,8 @@ local FontsList = Widget:extend()
 function FontsList:new(parent)
   FontsList.super.new(self, parent)
 
+  self.type_name = "widget.fontslist"
+
   self.border.width = 0
 
   self.dialog = false

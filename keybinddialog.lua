@@ -34,6 +34,8 @@ local KeybindDialog = Dialog:extend()
 function KeybindDialog:new()
   KeybindDialog.super.new(self, "Keybinding Selector")
 
+  self.type_name = "widget.keybinddialog"
+
   self.selected = nil
 
   local this = self
