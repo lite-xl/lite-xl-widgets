@@ -134,8 +134,6 @@ function Widget:new(parent, floating)
   -- used to allow proper node resizing
   self.mouse_pressed_outside = false
 
-  self.current_scale = SCALE
-
   if parent then
     parent:add_child(self)
   elseif self.defer_draw then
@@ -1003,29 +1001,23 @@ end
 ---any neccesary changes in sizes, padding, etc...
 ---@param new_scale number
 ---@param prev_scale number
-function Widget:on_rescale(new_scale, prev_scale) end
+function Widget:on_scale_change(new_scale, prev_scale)
+  local font_type = type(self.font)
+  if
+    font_type == "userdata"
+    or
+    (font_type == "table" and not self.font.container)
+  then
+    self.font:set_size(
+      self.font:get_size() * (new_scale / prev_scale)
+    )
+  end
+end
 
 ---If visible execute the widget calculations and returns true.
 ---@return boolean
 function Widget:update()
   if not self:is_visible() then return false end
-
-  if self.current_scale ~= SCALE then
-    local font_type = type(self.font)
-    if
-      font_type == "userdata"
-      or
-      (font_type == "table" and not self.font.container)
-    then
-      self.font:set_size(
-        self.font:get_size() * (SCALE / self.current_scale)
-      )
-    end
-    for _, child in pairs(self.childs) do
-      child:on_rescale(SCALE, self.current_scale)
-    end
-    self.current_scale = SCALE
-  end
 
   Widget.super.update(self)
 

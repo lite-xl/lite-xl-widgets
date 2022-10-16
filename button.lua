@@ -105,7 +105,8 @@ function Button:on_mouse_leave(...)
   self.hover_back = nil
 end
 
-function Button:on_rescale(new_scale, prev_scale)
+function Button:on_scale_change(new_scale, prev_scale)
+  Button.super.on_scale_change(self, new_scale, prev_scale)
   self.padding.x = self.padding.x * (new_scale / prev_scale)
   self.padding.y = self.padding.y * (new_scale / prev_scale)
 end
