@@ -4,6 +4,7 @@
 
 local core = require "core"
 local style = require "core.style"
+local translate = require "core.doc.translate"
 local Doc = require "core.doc"
 local DocView = require "core.docview"
 local View = require "core.view"
@@ -185,6 +186,13 @@ function TextBox:on_mouse_pressed(button, x, y, clicks)
     local line, col = self.textview:resolve_screen_position(x, y)
     self.drag_select = { line = line, col = col }
     self.textview.doc:set_selection(line, col, line, col)
+    if clicks == 2 then
+      local line1, col1 = translate.start_of_word(self.textview.doc, line, col)
+      local line2, col2 = translate.end_of_word(self.textview.doc, line1, col1)
+      self.textview.doc:set_selection(line2, col2, line1, col1)
+    elseif clicks == 3 then
+      self.textview.doc:set_selection(1, 1, 1, math.huge)
+    end
     if core.active_view ~= self.textview then
       self.textview:on_mouse_released(button, x, y)
     end
@@ -230,6 +238,7 @@ end
 
 function TextBox:deactivate()
   self.hover_border = nil
+  self.drag_select = false
   if self:get_text() == "" then
     self:set_text(self.placeholder)
     self.placeholder_active = true
