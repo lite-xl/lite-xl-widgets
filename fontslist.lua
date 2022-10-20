@@ -70,8 +70,8 @@ function FontsList:new(parent)
   self.add = Button(self, "Add")
   self.add:set_icon("B")
   function self.add:on_click()
-    if #this.list.rows > 2 then
-      MessageBox.error("Max Fonts Reached", "Only a maximum of three fonts can be added.")
+    if #this.list.rows > 9 then
+      MessageBox.error("Max Fonts Reached", "Only a maximum of ten fonts can be added.")
       return
     end
     if not this.dialog then
