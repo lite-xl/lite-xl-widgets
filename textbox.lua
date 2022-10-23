@@ -57,7 +57,7 @@ function TextView:set_text(text, select)
 end
 
 function TextView:get_gutter_width()
-  return self.gutter_width
+  return self.gutter_width or 0
 end
 
 function TextView:get_line_height()
