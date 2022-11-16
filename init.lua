@@ -10,6 +10,7 @@ local style = require "core.style"
 local keymap = require "core.keymap"
 local View = require "core.view"
 local RootView = require "core.rootview"
+local ScrollBar = require "widget.scrollbar"
 
 ---Represents the border of a widget.
 ---@class widget.border
@@ -94,6 +95,9 @@ local floating_widgets = {}
 ---@param floating? boolean | nil
 function Widget:new(parent, floating)
   Widget.super.new(self)
+
+  self.v_scrollbar = ScrollBar(self, {direction = "v", alignment = "e"})
+  self.h_scrollbar = ScrollBar(self, {direction = "h", alignment = "e"})
 
   self.type_name = "widget"
   self.parent = parent
