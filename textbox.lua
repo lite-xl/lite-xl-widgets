@@ -259,6 +259,7 @@ end
 ---  line, col, text, undo_stack, time
 ---remove arguments (see Doc:raw_remove):
 ---  line1, col1, line2, col2, undo_stack, time
+---@diagnostic disable-next-line
 function TextBox:on_text_change(action, ...) end
 
 function TextBox:update()

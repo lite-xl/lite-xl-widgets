@@ -5,7 +5,6 @@
 --
 
 local core = require "core"
-local command = require "core.command"
 local style = require "core.style"
 local Button = require "widget.button"
 local CheckBox = require "widget.checkbox"
@@ -17,7 +16,11 @@ local SelectBox = require "widget.selectbox"
 local MessageBox = require "widget.messagebox"
 local Fonts = require "widget.fonts"
 
+---@class widget.fontdialog.fontoptions : renderer.fontoptions
+---@field size number
+
 ---@class widget.fontdialog : widget.dialog
+---@field super widget.dialog
 ---@field fontdata widget.fontslist.font
 ---@field preview widget.label
 ---@field font_size widget.numberbox
@@ -37,7 +40,7 @@ local FontDialog = Dialog:extend()
 
 ---Constructor
 ---@param font? widget.fontslist.font
----@param options? renderer.fontoptions
+---@param options? widget.fontdialog.fontoptions
 function FontDialog:new(font, options)
   FontDialog.super.new(self, "Font Selector")
 
@@ -190,7 +193,7 @@ function FontDialog:get_font()
   return self.fontdata
 end
 
----@param options renderer.fontoptions
+---@param options widget.fontdialog.fontoptions
 function FontDialog:set_options(options)
   if options.size then
     self.font_size:set_value(tonumber(options.size) or 15)
@@ -233,7 +236,7 @@ function FontDialog:set_options(options)
   end
 end
 
----@return renderer.fontoptions
+---@return widget.fontdialog.fontoptions
 function FontDialog:get_options()
   return {
     size = self.font_size:get_value(),
@@ -249,7 +252,7 @@ end
 
 ---Called when the user clicks on save
 ---@param font widget.fontslist.font
----@param options renderer.fontoptions
+---@param options widget.fontdialog.fontoptions
 function FontDialog:on_save(font, options) end
 
 function FontDialog:update()

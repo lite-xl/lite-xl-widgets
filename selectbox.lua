@@ -176,6 +176,7 @@ end
 ---Overwrite to listen to on_selected events.
 ---@param item_idx integer
 ---@param item_data widget.listbox.row
+---@diagnostic disable-next-line
 function SelectBox:on_selected(item_idx, item_data) end
 
 function SelectBox:on_mouse_enter(...)

@@ -34,6 +34,7 @@ end
 
 ---Called when a tab is clicked.
 ---@param pane widget.notebook.pane
+---@diagnostic disable-next-line
 function NoteBook:on_tab_click(pane) end
 
 ---Adds a new pane to the notebook and returns a container widget where
@@ -82,7 +83,7 @@ end
 ---@param name string
 ---@return widget.notebook.pane | nil
 function NoteBook:get_pane(name)
-  for pos, pane in pairs(self.panes) do
+  for _, pane in pairs(self.panes) do
     if pane.name == name then
       return pane
     end

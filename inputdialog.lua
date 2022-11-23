@@ -11,6 +11,7 @@ local Label = require "widget.label"
 local TextBox = require "widget.textbox"
 
 ---@class widget.inputdialog : widget.dialog
+---@field super widget.dialog
 ---@field message widget.label
 ---@field text widget.textbox
 ---@field save widget.button

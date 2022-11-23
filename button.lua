@@ -52,7 +52,7 @@ function Button:toggle_expand(expand)
 end
 
 ---Set the icon drawn alongside the button text.
----@param code string
+---@param code? string
 ---@param color? renderer.color
 ---@param hover_color? renderer.color
 function Button:set_icon(code, color, hover_color)

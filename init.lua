@@ -61,20 +61,20 @@ local WidgetFontReference = {}
 ---@field public background_color renderer.color
 ---@field public render_background boolean
 ---@field public type_name string
----@field private visible boolean
----@field private has_focus boolean
----@field private dragged boolean
----@field private tooltip string
----@field private label string
----@field private input_text boolean
----@field private textview widget
----@field private next_zindex integer
----@field private mouse widget.position
----@field private prev_size widget.position
----@field private mouse_is_pressed boolean
----@field private mouse_is_hovering boolean
----@field private mouse_pressed_outside boolean
----@field private is_scrolling boolean
+---@field protected visible boolean
+---@field protected has_focus boolean
+---@field protected dragged boolean
+---@field protected tooltip string
+---@field protected label string | widget.styledtext
+---@field protected input_text boolean
+---@field protected textview widget
+---@field protected next_zindex integer
+---@field protected mouse widget.position
+---@field protected prev_size widget.position
+---@field protected mouse_is_pressed boolean
+---@field protected mouse_is_hovering boolean
+---@field protected mouse_pressed_outside boolean
+---@field protected is_scrolling boolean
 local Widget = View:extend()
 
 ---Indicates on a widget.styledtext that a new line follows.
@@ -584,7 +584,7 @@ function Widget:set_tooltip(tooltip)
 end
 
 ---A text label for the widget, not all widgets support this.
----@param text string
+---@param text string | widget.styledtext
 function Widget:set_label(text)
   self.label = text
 end

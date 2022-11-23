@@ -142,7 +142,7 @@ function FilePicker:clear_filters()
 end
 
 ---Set the operation mode for the file picker.
----@param mode widget.filepicker.modes | string
+---@param mode widget.filepicker.modes | string | integer
 function FilePicker:set_mode(mode)
   if type(mode) == "string" then
     ---@type integer

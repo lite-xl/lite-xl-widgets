@@ -11,9 +11,9 @@ local Button = require "widget.button"
 local Label = require "widget.label"
 
 ---@class widget.dialog : widget
----@field private title widget.label
----@field private close widget.button
----@field private panel widget
+---@field protected title widget.label
+---@field protected close widget.button
+---@field protected panel widget
 local Dialog = Widget:extend()
 
 ---Constructor

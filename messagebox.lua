@@ -25,9 +25,9 @@ MessageBox.ICON_INFO = "i"
 MessageBox.ICON_WARNING = "!"
 
 ---@alias widget.messagebox.icontype
----|>"MessageBox.ICON_ERROR"
----| "MessageBox.ICON_INFO"
----| "MessageBox.ICON_WARNING"
+---|>`MessageBox.ICON_ERROR`
+---| `MessageBox.ICON_INFO`
+---| `MessageBox.ICON_WARNING`
 
 MessageBox.BUTTONS_OK = 1
 MessageBox.BUTTONS_OK_CANCEL = 2
@@ -35,17 +35,17 @@ MessageBox.BUTTONS_YES_NO = 3
 MessageBox.BUTTONS_YES_NO_CANCEL = 4
 
 ---@alias widget.messagebox.buttonstype
----|>"MessageBox.BUTTONS_OK"
----| "MessageBox.BUTTONS_OK_CANCEL"
----| "MessageBox.BUTTONS_YES_NO"
----| "MessageBox.BUTTONS_YES_NO_CANCEL"
+---|>`MessageBox.BUTTONS_OK`
+---| `MessageBox.BUTTONS_OK_CANCEL`
+---| `MessageBox.BUTTONS_YES_NO`
+---| `MessageBox.BUTTONS_YES_NO_CANCEL`
 
----@alias widget.messagebox.onclosehandler fun(self: widget.messagebox, button_id: integer, button: widget.button):void
+---@alias widget.messagebox.onclosehandler fun(self: widget.messagebox, button_id: integer, button: widget.button)
 
 ---Constructor
 ---@param parent widget
 ---@param title string
----@param message string
+---@param message string | widget.styledtext
 ---@param icon widget.messagebox.icontype
 ---@param icon_color renderer.color
 function MessageBox:new(parent, title, message, icon, icon_color)
@@ -65,14 +65,14 @@ function MessageBox:new(parent, title, message, icon, icon_color)
 end
 
 ---Change the message box title.
----@param text string|widget.styledtext
+---@param text string | widget.styledtext
 function MessageBox:set_title(text)
   self.title:set_label(text)
 end
 
 ---Change the message box icon.
 ---@param icon widget.messagebox.icontype
----@param icon_color renderer.color
+---@param color? renderer.color
 function MessageBox:set_icon(icon, color)
   if not color then
     color = style.text
@@ -86,7 +86,7 @@ function MessageBox:set_icon(icon, color)
 end
 
 ---Change the message box message.
----@param text string|widget.styledtext
+---@param text string | widget.styledtext
 function MessageBox:set_message(text)
   self.message:set_label(text)
 end
@@ -104,8 +104,8 @@ function MessageBox:add_button(button_or_label)
   local button_id = #self.buttons
   local new_button = self.buttons[button_id]
   local on_click = new_button.on_click
-  new_button.on_click = function(this)
-    on_click(this)
+  new_button.on_click = function(this, ...)
+    on_click(this, ...)
     self:on_close(button_id, new_button)
   end
 end
@@ -165,9 +165,8 @@ end
 ---Called when the user clicks one of the buttons in the message box.
 ---@param button_id integer
 ---@param button widget.button
-function MessageBox:on_close(button_id, button)
-  self:hide()
-end
+---@diagnostic disable-next-line
+function MessageBox:on_close(button_id, button) self:hide() end
 
 function MessageBox:update()
   if not MessageBox.super.update(self) then return false end
@@ -277,12 +276,12 @@ function MessageBox:draw()
 end
 
 ---Wrapper to easily show a message box.
----@param title string
----@param message string
+---@param title string | widget.styledtext
+---@param message string | widget.styledtext
 ---@param icon widget.messagebox.icontype
----@param icon_color renderer.color
----@param on_close widget.messagebox.onclosehandler
----@param buttons widget.messagebox.buttonstype
+---@param icon_color? renderer.color
+---@param on_close? widget.messagebox.onclosehandler
+---@param buttons? widget.messagebox.buttonstype
 function MessageBox.alert(title, message, icon, icon_color, on_close, buttons)
   buttons = buttons or MessageBox.BUTTONS_OK
   ---@type widget.messagebox
@@ -313,8 +312,8 @@ function MessageBox.alert(title, message, icon, icon_color, on_close, buttons)
 end
 
 ---Wrapper to easily show a info message box.
----@param title string
----@param message string
+---@param title string | widget.styledtext
+---@param message string | widget.styledtext
 ---@param on_close? widget.messagebox.onclosehandler
 ---@param buttons? widget.messagebox.buttonstype
 function MessageBox.info(title, message, on_close, buttons)
@@ -322,8 +321,8 @@ function MessageBox.info(title, message, on_close, buttons)
 end
 
 ---Wrapper to easily show a warning message box.
----@param title string
----@param message string
+---@param title string | widget.styledtext
+---@param message string | widget.styledtext
 ---@param on_close? widget.messagebox.onclosehandler
 ---@param buttons? widget.messagebox.buttonstype
 function MessageBox.warning(title, message, on_close, buttons)
@@ -331,8 +330,8 @@ function MessageBox.warning(title, message, on_close, buttons)
 end
 
 ---Wrapper to easily show an error message box.
----@param title string
----@param message string
+---@param title string | widget.styledtext
+---@param message string | widget.styledtext
 ---@param on_close? widget.messagebox.onclosehandler
 ---@param buttons? widget.messagebox.buttonstype
 function MessageBox.error(title, message, on_close, buttons)

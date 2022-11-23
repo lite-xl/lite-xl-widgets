@@ -17,6 +17,7 @@ local MessageBox = require "widget.messagebox"
 local current_dialog = nil
 
 ---@class widget.keybinddialog : widget.dialog
+---@field super widget.dialog
 ---@field selected integer
 ---@field shortcuts widget.listbox
 ---@field add widget.button

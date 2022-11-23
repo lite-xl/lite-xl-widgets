@@ -22,7 +22,7 @@ local ListBoxColumn = {}
 ---@alias widget.listbox.colpos table<integer,integer>
 
 ---@class widget.listbox : widget
----@field private rows widget.listbox.row[]
+---@field rows widget.listbox.row[]
 ---@field private row_data any
 ---@field private columns widget.listbox.column[]
 ---@field private positions widget.listbox.colpos[]
