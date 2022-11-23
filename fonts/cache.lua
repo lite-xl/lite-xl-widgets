@@ -50,11 +50,21 @@ function FontCache:new()
   end
 end
 
----Build the font cache and save it.
-function FontCache:build()
+---Check if the cache is already building.
+---@return boolean building
+function FontCache:is_building()
   if self.building or self.searching_monospaced then
+    return true
+  end
+  return false
+end
+
+---Build the font cache and save it.
+---@return boolean started False if cache is already been built
+function FontCache:build()
+  if self:is_building() then
     core.log_quiet("The font cache is already been generated, please wait.")
-    return
+    return false
   end
 
   self.found = 0
@@ -79,12 +89,16 @@ function FontCache:build()
     )
     self:verify_monospaced()
   end)
+
+  return true
 end
 
 ---Clear current font cache and rebuild it.
+---@return boolean started False if cache is already been built
 function FontCache:rebuild()
-  if self.building or self.searching_monospaced then
+  if self:is_building() then
     core.log_quiet("The font cache is already been generated, please wait.")
+    return false
   end
 
   local fontcache_file = USERDIR .. "/font_cache.lua"
@@ -95,7 +109,12 @@ function FontCache:rebuild()
     os.remove(fontcache_file)
   end
 
-  self:build()
+  self.fonts = {}
+  self.loaded_fonts = {}
+  self.found = 0
+  self.found_monospaced = 0
+
+  return self:build()
 end
 
 ---Scan a directory for valid font files and load them into the cache.
@@ -114,7 +133,8 @@ function FontCache:scan_dir(path, run_count)
         local read, errmsg = self.fontinfo:read(font_path)
 
         if read then
-          local font_data, errmsg = self.fontinfo:get_data()
+          local font_data
+          font_data, errmsg = self.fontinfo:get_data()
           if font_data then
             table.insert(self.fonts, font_data)
             self.found = self.found + 1
@@ -143,7 +163,7 @@ end
 
 ---Search and mark monospaced fonts on currently loaded cache and save it.
 function FontCache:verify_monospaced()
-  if self.building or self.searching_monospaced then
+  if self:is_building() then
     core.log_quiet("The monospaced verification is already running, please wait.")
     return
   end

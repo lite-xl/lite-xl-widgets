@@ -7,10 +7,10 @@ local StatusView = require "core.statusview"
 ---@class widget.fonts
 local Fonts = {}
 
----@type widget.fonts.cache
+---@type widget.fonts.cache | nil
 local fontcache = nil
 
----@type table<integer, string>
+---@type table<integer, string> | nil
 local fonts = nil
 
 ---Last time the status view item was rendered
@@ -25,11 +25,13 @@ local pick_monospaced = false
 ---Generate the list of fonts displayed on the CommandView.
 ---@param monospaced? boolean Only display fonts detected as monospaced.
 local function generate_fonts(monospaced)
-  if fontcache.building then monospaced = false end
-  fonts = {}
-  for idx, f in ipairs(fontcache.fonts) do
-    if not monospaced or (monospaced and f.monospace) then
-      table.insert(fonts, f.fullname .. "||" .. idx)
+  if fontcache then
+    if fontcache.building then monospaced = false end
+    fonts = {}
+    for idx, f in ipairs(fontcache.fonts) do
+      if not monospaced or (monospaced and f.monospace) then
+        table.insert(fonts, f.fullname .. "||" .. idx)
+      end
     end
   end
 end
@@ -82,7 +84,7 @@ end
 
 ---Launch the commandview and let the user select a font.
 ---@param callback fun(name:string, path:string)
----@param monospaced? boolean
+---@param monospaced boolean
 function Fonts.show_picker(callback, monospaced)
   if not fontcache then fontcache = FontCache() end
 
@@ -163,10 +165,18 @@ function Fonts.show_picker_ask_monospace(callback)
   })
 end
 
+---Check if the font cache is been built.
+---@return boolean building
+function Fonts.cache_is_building()
+  if not fontcache then return false end
+  return fontcache:is_building()
+end
+
 ---Remove current fonts cache file and regenerates a fresh one.
+---@return boolean started False if cache is already been built
 function Fonts.clean_cache()
   if not fontcache then fontcache = FontCache() end
-  fontcache:rebuild()
+  return fontcache:rebuild()
 end
 
 core.status_view:add_item({

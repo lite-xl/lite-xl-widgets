@@ -31,6 +31,8 @@ local FontReader = Object:extend()
 ---@field public license string
 ---@field public tfamily string
 ---@field public tsubfamily '"Regular"' | '"Bold"' | '"Italic"' | '"Bold Italic"'
+---@field public wwsfamily string
+---@field public wwssubfamily string
 ---@field public monospace boolean
 
 ---@class widget.fonts.info : core.object
@@ -76,7 +78,7 @@ end
 function FontCDATA:unum(b)
   local v, data = 0, self.data
   assert(#data >= self.position + b, 11)
-  for i = 1, b do
+  for _ = 1, b do
     self.position = self.position + 1
     v = v * 256 + data:byte(self.position)
   end
@@ -156,7 +158,8 @@ end
 
 ---@param offset integer
 ---@param len integer
----@return widget.fonts.cdata
+---@return widget.fonts.cdata?
+---@return string|nil errmsg
 function FontReader:cdata(offset, len)
   local data, errmsg = self:read(offset, len)
   if data then
@@ -246,7 +249,7 @@ local function otf_name_table(reader, fofs, ntbl)
   if not cd_d then
     return nil, "error reading names table"
   end
-  for i = 1, ntbl do
+  for _ = 1, ntbl do
     local t = {-- tag, csum, ofs, len
       cd_d:str(4), cd_d:ulong(), cd_d:ulong(), cd_d:ulong()
     }
@@ -376,6 +379,7 @@ local function fontinfo_read_native(self, font_path)
   ---@type string?
   local errmsg
 
+  ---@diagnostic disable-next-line
   font, errmsg = renderer.font.get_metadata(font_path)
 
   if not font then
@@ -479,13 +483,14 @@ end
 ---Open a font file and read its metadata.
 ---@param font_path string
 ---@return widget.fonts.info?
----@return string errmsg
+---@return string|nil errmsg
 function FontInfo:read(font_path)
   self.data = {}
   self.path = font_path
 
   local read, errmsg
 
+  ---@diagnostic disable-next-line
   if type(renderer.font.get_metadata) == "function" then
     read, errmsg = fontinfo_read_native(self, font_path)
   else
@@ -509,7 +514,7 @@ end
 ---copyright and license information which can be long.
 ---@param idx? integer Optional position of the embedded font
 ---@return widget.fonts.data?
----@return string errmsg
+---@return string|nil errmsg
 function FontInfo:get_data(idx)
   idx = idx or 1
   local data = {}
