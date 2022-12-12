@@ -55,7 +55,7 @@ local WidgetFontReference = {}
 ---@field public border widget.border
 ---@field public clickable boolean
 ---@field public draggable boolean
----@fie;d public scrollable boolean
+---@field public scrollable boolean
 ---@field public font widget.font
 ---@field public foreground_color renderer.color
 ---@field public background_color renderer.color
@@ -189,6 +189,13 @@ function Widget:show()
     self.prev_size.y = 0
   end
   self.visible = true
+  -- re-triggers update to make sure everything was properly calculated
+  -- and redraw the interface once, maybe something else can be changed
+  -- to not require this action, but for now lets do this.
+  core.add_thread(function()
+    self:update()
+    core.redraw = true
+  end)
 end
 
 ---Hide the widget.
@@ -380,7 +387,11 @@ function Widget:set_target_size(axis, value)
   if not self.visible then
     return false
   end
-  self.size[axis] = value
+  if axis == "x" then
+    self:set_size(value)
+  else
+    self:set_size(nil, value)
+  end
   return true
 end
 
@@ -618,6 +629,8 @@ function Widget:swap_active_child(child)
     self.parent:swap_active_child(child)
     return
   end
+
+  if child and child == self.child_active then return end
 
   local active_child = self.child_active
 
@@ -1128,17 +1141,19 @@ function Widget.override_rootview()
     local pressed = false
     for i=#floating_widgets, 1, -1 do
       local widget = floating_widgets[i]
-      widget.mouse_pressed_outside = not widget:mouse_on_top(x, y)
-      if
-        (not widget.defer_draw and not widget.child_active)
-        or
-        widget.mouse_pressed_outside
-        or
-        (pressed or not widget:on_mouse_pressed(button, x, y, clicks))
-      then
-        widget:swap_active_child()
-      else
-        pressed = true
+      if widget.visible then
+        widget.mouse_pressed_outside = not widget:mouse_on_top(x, y)
+        if
+          (not widget.defer_draw and not widget.child_active)
+          or
+          widget.mouse_pressed_outside
+          or
+          (pressed or not widget:on_mouse_pressed(button, x, y, clicks))
+        then
+          widget:swap_active_child()
+        else
+          pressed = true
+        end
       end
     end
     if not pressed then
@@ -1152,16 +1167,18 @@ function Widget.override_rootview()
     local released = false
     for i=#floating_widgets, 1, -1 do
       local widget = floating_widgets[i]
-      if
-        (not widget.defer_draw and not widget.child_active)
-        or
-        widget.mouse_pressed_outside
-        or
-        not widget:on_mouse_released(button, x, y)
-      then
-        widget.mouse_pressed_outside = false
-      else
-        released = true
+      if widget.visible then
+        if
+          (not widget.defer_draw and not widget.child_active)
+          or
+          widget.mouse_pressed_outside
+          or
+          not widget:on_mouse_released(button, x, y)
+        then
+          widget.mouse_pressed_outside = false
+        else
+          released = true
+        end
       end
     end
     if not released then
@@ -1174,30 +1191,32 @@ function Widget.override_rootview()
     if core.active_view ~= core.command_view then
       for i=#floating_widgets, 1, -1 do
         local widget = floating_widgets[i]
-        if
-          (not widget.defer_draw and not widget.child_active)
-          or
-          widget.mouse_pressed_outside
-          or
-          (moved or not widget:on_mouse_moved(x, y, dx, dy))
-        then
-            if
-              not widget.is_scrolling
-              and
-              not widget.child_active
-              and
-              widget.outside_view
-            then
-              core.set_active_view(widget.outside_view)
-              widget.outside_view = nil
+        if widget.visible then
+          if
+            (not widget.defer_draw and not widget.child_active)
+            or
+            widget.mouse_pressed_outside
+            or
+            (moved or not widget:on_mouse_moved(x, y, dx, dy))
+          then
+              if
+                not widget.is_scrolling
+                and
+                not widget.child_active
+                and
+                widget.outside_view
+              then
+                core.set_active_view(widget.outside_view)
+                widget.outside_view = nil
+              end
+          elseif not moved then
+            if not widget.child_active and widget.defer_draw then
+              if not widget.outside_view then
+                widget.outside_view = core.active_view
+              end
+              core.set_active_view(widget)
+              moved = true
             end
-        elseif not moved then
-          if not widget.child_active and widget.defer_draw then
-            if not widget.outside_view then
-              widget.outside_view = core.active_view
-            end
-            core.set_active_view(widget)
-            moved = true
           end
         end
       end
@@ -1210,7 +1229,9 @@ function Widget.override_rootview()
   function RootView:on_mouse_wheel(y, x)
     for i=#floating_widgets, 1, -1 do
       local widget = floating_widgets[i]
-      if widget.defer_draw and widget:on_mouse_wheel(y, x) then
+      if
+        widget.visible and widget.defer_draw and widget:on_mouse_wheel(y, x)
+      then
         return true
       end
     end
@@ -1220,7 +1241,11 @@ function Widget.override_rootview()
   function RootView:on_file_dropped(filename, x, y)
     for i=#floating_widgets, 1, -1 do
       local widget = floating_widgets[i]
-      if widget.defer_draw and widget:on_file_dropped(filename, x, y) then
+      if
+        widget.visible and widget.defer_draw
+        and
+        widget:on_file_dropped(filename, x, y)
+      then
         return true
       end
     end
@@ -1230,7 +1255,9 @@ function Widget.override_rootview()
   function RootView:on_text_input(text)
     for i=#floating_widgets, 1, -1 do
       local widget = floating_widgets[i]
-      if widget.defer_draw and widget:on_text_input(text) then
+      if
+        widget.visible and widget.defer_draw and widget:on_text_input(text)
+      then
         return true
       end
     end

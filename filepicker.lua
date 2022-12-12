@@ -127,7 +127,12 @@ function FilePicker:set_size(width, height)
 
   self.button:set_position(self.file:get_right(), 0)
 
-  self.size.y = self.button:get_height()
+  self.size.y = math.max(
+    self.file:get_height(),
+    self.button:get_height()
+    -- something is off on calculation since adding border width should not
+    -- be needed to display whole rendered control at all...
+  ) + self.button.border.width
 end
 
 ---Add a lua pattern to the filters list
