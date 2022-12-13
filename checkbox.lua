@@ -19,6 +19,8 @@ function CheckBox:new(parent, label)
   self.type_name = "widget.checkbox"
   self.checked = false
   self:set_label(label or "")
+  self.animating = false
+  self.animating_color = style.caret
 end
 
 ---Set the checkbox label and recalculates the widget size.
@@ -67,6 +69,23 @@ function CheckBox:on_click()
   self.checked = not self.checked
   self:on_checked(self.checked)
   self:on_change(self.checked)
+
+  self.animating = true
+  self.animating_color = {table.unpack(style.caret)}
+  local target_color = {table.unpack(style.caret)}
+
+  if self.checked then
+    self.animating_color[4] = 0
+    target_color[4] = 255
+  else
+    self.animating_color[4] = 255
+    target_color[4] = 0
+  end
+  self:animate(self.animating_color, {table.unpack(target_color)}, {
+    on_complete = function()
+      self.animating = false
+    end
+  })
 end
 
 function CheckBox:get_box_rect()
@@ -101,7 +120,9 @@ function CheckBox:draw()
     self.hover_back or self.background_color or style.background
   )
 
-  if self.checked then
+  if self.animating then
+    renderer.draw_rect(bx + 2, by + 2, bw-4, bh-4, self.animating_color)
+  elseif self.checked then
     renderer.draw_rect(bx + 2, by + 2, bw-4, bh-4, style.caret)
   end
 
