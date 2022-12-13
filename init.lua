@@ -16,7 +16,6 @@ local ScrollBar = require "widget.scrollbar"
 ---@class widget.border
 ---@field public width number
 ---@field public color renderer.color | nil
-local WidgetBorder = {}
 
 ---Represents the position of a widget.
 ---@class widget.position
@@ -26,19 +25,32 @@ local WidgetBorder = {}
 ---@field public ry number Relative Y
 ---@field public dx number Dragging initial x position
 ---@field public dy number Dragging initial y position
-local WidgetPosition = {}
+
+---@class widget.animation.options
+---Prevents duplicated animations from getting added.
+---@field name? string
+---Speed of the animation, defaults to 0.5
+---@field rate? number
+---Called each time the value of a property changes.
+---@field on_step? fun(target:table, property:string, value:number)
+---Called when the animation finishes.
+---@field on_complete? fun(widget:widget)
+
+---@class widget.animation
+---@field target table
+---@field properties table<string,number>
+---@field options? widget.animation.options
 
 ---Represents a reference to a font stored elsewhere.
 ---@class widget.fontreference
 ---@field public container table<string, renderer.font>
 ---@field public name string
-local WidgetFontReference = {}
 
 ---@alias widget.font widget.fontreference | renderer.font | string
 
 ---@alias widget.clicktype
----|>'"left"'
----| '"right"'
+---| "left"
+---| "right"
 
 ---@alias widget.styledtext table<integer, renderer.font|widget.fontreference|renderer.color|integer|string>
 
@@ -48,6 +60,7 @@ local WidgetFontReference = {}
 ---@field public parent widget | nil
 ---@field public name string
 ---@field public position widget.position
+---Modifying this property directly is not advised, use set_size() instead.
 ---@field public size widget.position
 ---@field public childs table<integer,widget>
 ---@field public child_active widget | nil
@@ -75,6 +88,7 @@ local WidgetFontReference = {}
 ---@field protected mouse_is_hovering boolean
 ---@field protected mouse_pressed_outside boolean
 ---@field protected is_scrolling boolean
+---@field protected animations widget.animation[]
 local Widget = View:extend()
 
 ---Indicates on a widget.styledtext that a new line follows.
@@ -138,6 +152,8 @@ function Widget:new(parent, floating)
   -- used to allow proper node resizing
   self.mouse_pressed_outside = false
 
+  self.animations = {}
+
   if parent then
     parent:add_child(self)
   elseif self.defer_draw then
@@ -198,6 +214,37 @@ function Widget:show()
   end)
 end
 
+---Perform an animated show.
+---@param lock_x? boolean Do not resize width while animating
+---@param lock_y? boolean Do not resize height while animating
+---@param options? widget.animation.options
+function Widget:show_animated(lock_x, lock_y, options)
+  if not self.parent then
+    if self.size.x <= 0 or self.size.y <= 0 then
+      self.size.x = self.prev_size.x
+      self.size.y = self.prev_size.y
+    end
+    self.prev_size.x = 0
+    self.prev_size.y = 0
+  end
+
+  local target_x, target_y = math.floor(self.size.x), math.floor(self.size.y)
+  self.size.x = lock_x and target_x or 0
+  self.size.y = lock_y and target_y or 0
+  local properties = {}
+  if not lock_x then properties["x"] = target_x end
+  if not lock_y then properties["y"] = target_y end
+  options = options or {}
+  self:animate(self.size, properties, {
+    name = options.name or "show_animated",
+    rate = options.rate,
+    on_step = options.on_step,
+    on_complete = options.on_complete
+  })
+
+  self.visible = true
+end
+
 ---Hide the widget.
 function Widget:hide()
   self.visible = false
@@ -217,6 +264,32 @@ function Widget:hide()
   end
 end
 
+---Perform an animated hide.
+---@param lock_x? boolean Do not resize width while animating
+---@param lock_y? boolean Do not resize height while animating
+---@param options? widget.animation.options
+function Widget:hide_animated(lock_x, lock_y, options)
+  local x, y = self.size.x, self.size.y
+  local target_x = lock_x and self.size.x or 0
+  local target_y = lock_y and self.size.y or 0
+  local properties = {}
+  if not lock_x then properties["x"] = target_x end
+  if not lock_y then properties["y"] = target_y end
+  options = options or {}
+  self:animate(self.size, properties, {
+    name = options.name or "hide_animated",
+    rate = options.rate,
+    on_step = options.on_step,
+    on_complete = function()
+      self.size.x, self.size.y = x, y
+      self:hide()
+      if options.on_complete then
+        options.on_complete(self)
+      end
+    end
+  })
+end
+
 ---When set to false the background rendering is disabled.
 ---@param enable? boolean | nil
 function Widget:toggle_background(enable)
@@ -228,11 +301,23 @@ function Widget:toggle_background(enable)
 end
 
 ---Toggle visibility of widget.
-function Widget:toggle_visible()
+---@param animated? boolean
+---@param lock_x? boolean
+---@param lock_y? boolean
+---@param options? widget.animation.options
+function Widget:toggle_visible(animated, lock_x, lock_y, options)
   if not self.visible then
-    self:show()
+    if not animated then
+      self:show()
+    else
+      self:show_animated(lock_x, lock_y, options)
+    end
   else
-    self:hide()
+    if not animated then
+      self:hide()
+    else
+      self:hide_animated(lock_x, lock_y, options)
+    end
   end
 end
 
@@ -1031,6 +1116,100 @@ function Widget:on_scale_change(new_scale, prev_scale)
   end
 end
 
+---Registers a new animation to be ran on the update cycle.
+---@param target? table If nil assumes properties belong to widget it self.
+---@param properties table<string,number>
+---@param options? widget.animation.options
+function Widget:animate(target, properties, options)
+  if not target then target = self end
+
+  -- if name is set then prevent adding if another one with the same
+  -- animation name is already running
+  if options and options.name then
+    for _, animation in ipairs(self.animations) do
+      if animation.options and animation.options.name == options.name then
+        return
+      end
+    end
+  end
+
+  table.insert(self.animations, {
+    target = target,
+    properties = properties,
+    options = options
+  })
+end
+
+---Runs all registered animations removing duplicated and finished ones.
+function Widget:run_animations()
+  if #self.animations > 0 then
+    ---@type table<widget.animation, widget.animation>
+    local duplicates = {}
+
+    local targets = {}
+    local deleted = 0
+    for i=1, #self.animations do
+      local animation = self.animations[i - deleted]
+
+      -- do not run animations that change same target to prevent conflicts.
+      if not targets[animation.target] then
+        local finished = true
+        local options = animation.options or {}
+        for name, value in pairs(animation.properties) do
+          if animation.target[name] ~= value then
+            self:move_towards(animation.target, name, value, options.rate)
+            if options.on_step then
+              options.on_step(animation.target, name, animation.target[name])
+            end
+            if animation.target[name] ~= value then
+              finished = false
+            end
+          end
+        end
+        if finished then
+          if options.on_complete then
+            options.on_complete(self)
+          end
+          table.remove(self.animations, i - deleted)
+          deleted = deleted + 1
+        end
+        targets[animation.target] = animation
+      -- only registers it as duplicated if the animation does needs to
+      -- perform any tasks on completion.
+      elseif not targets[animation.target].on_complete then
+        duplicates[targets[animation.target]] = animation
+      end
+    end
+
+    -- remove older duplcated animations that modify same target and properties
+    for duplicate, newer_animation in pairs(duplicates) do
+      local exact_properties = true
+      for name, _ in pairs(duplicate.properties) do
+        if not newer_animation.properties[name] then
+          exact_properties = false
+          break
+        end
+      end
+      if exact_properties then
+        for name, _ in pairs(newer_animation.properties) do
+          if not duplicate.properties[name] then
+            exact_properties = false
+            break
+          end
+        end
+      end
+      if exact_properties then
+        for i, animation in ipairs(self.animations) do
+          if animation == duplicate then
+            table.remove(self.animations, i)
+            break
+          end
+        end
+      end
+    end
+  end
+end
+
 ---If visible execute the widget calculations and returns true.
 ---@return boolean
 function Widget:update()
@@ -1040,6 +1219,9 @@ function Widget:update()
 
   -- call this to be able to properly scroll
   self:update_position()
+
+  -- run any pending animations
+  self:run_animations()
 
   for _, child in pairs(self.childs) do
     child:update()
