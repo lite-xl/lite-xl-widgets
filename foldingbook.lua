@@ -174,6 +174,7 @@ function FoldingBook:update()
 
     if pane.expanded and not pane.container.hiding then
       pane.container:set_position(cx, cy)
+      pane.container:set_size(cw)
       if not pane.container.visible then
         pane.container:set_size(cw, ch)
         pane.container:show_animated(true)
