@@ -42,7 +42,7 @@ function SelectBox:new(parent, label)
       self:on_selected(idx-1, data)
       self:on_change(self.selected)
     end
-    self.list_container:hide()
+    self.list_container:hide_animated(true)
   end
 
   self:set_label(label or "select")
@@ -197,7 +197,7 @@ function SelectBox:on_click(button, x, y)
 
     self.list_container.border.color = style.caret
 
-    self.list_container:toggle_visible()
+    self.list_container:toggle_visible(true, true)
 
     self.list:resize_to_parent()
   end
@@ -267,4 +267,3 @@ end
 
 
 return SelectBox
-
