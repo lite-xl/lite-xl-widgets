@@ -1,7 +1,8 @@
 {
   "plugins": [
     {
-      "name": "widget",
+      "id": "widget",
+      "name": "Widgets",
       "description": "Reusable widget components for plugin developers.",
       "version": "0.1",
       "mod_version": "3",
