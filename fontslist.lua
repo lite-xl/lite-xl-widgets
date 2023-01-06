@@ -4,11 +4,11 @@
 -- @license MIT
 --
 local style = require "core.style"
-local Widget = require "widget"
-local Button = require "widget.button"
-local ListBox = require "widget.listbox"
-local FontDialog = require "widget.fontdialog"
-local MessageBox = require "widget.messagebox"
+local Widget = require "libraries.widget"
+local Button = require "libraries.widget.button"
+local ListBox = require "libraries.widget.listbox"
+local FontDialog = require "libraries.widget.fontdialog"
+local MessageBox = require "libraries.widget.messagebox"
 
 ---@class widget.fontslist.font : widget
 ---@field name string

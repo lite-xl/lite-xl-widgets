@@ -1,7 +1,7 @@
 local core = require "core"
 local common = require "core.common"
 local style = require "core.style"
-local FontCache = require "widget.fonts.cache"
+local FontCache = require "libraries.widget.fonts.cache"
 local StatusView = require "core.statusview"
 
 ---@class widget.fonts

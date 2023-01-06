@@ -6,9 +6,9 @@
 
 local core = require "core"
 local style = require "core.style"
-local Widget = require "widget"
-local Button = require "widget.button"
-local Label = require "widget.label"
+local Widget = require "libraries.widget"
+local Button = require "libraries.widget.button"
+local Label = require "libraries.widget.label"
 
 ---@class widget.dialog : widget
 ---@field protected title widget.label

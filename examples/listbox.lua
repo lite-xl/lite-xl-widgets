@@ -4,8 +4,8 @@
 
 local style = require "core.style"
 local command = require "core.command"
-local Widget = require "widget"
-local ListBox = require "widget.listbox"
+local Widget = require "libraries.widget"
+local ListBox = require "libraries.widget.listbox"
 
 ---@type widget
 local widget = Widget()

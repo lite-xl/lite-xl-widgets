@@ -5,7 +5,7 @@
 --
 
 local style = require "core.style"
-local Widget = require "widget"
+local Widget = require "libraries.widget"
 
 ---@class widget.line : widget
 ---@field public padding integer

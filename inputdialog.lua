@@ -5,10 +5,10 @@
 --
 
 local style = require "core.style"
-local Button = require "widget.button"
-local Dialog = require "widget.dialog"
-local Label = require "widget.label"
-local TextBox = require "widget.textbox"
+local Button = require "libraries.widget.button"
+local Dialog = require "libraries.widget.dialog"
+local Label = require "libraries.widget.label"
+local TextBox = require "libraries.widget.textbox"
 
 ---@class widget.inputdialog : widget.dialog
 ---@field super widget.dialog

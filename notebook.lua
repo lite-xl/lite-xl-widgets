@@ -5,8 +5,8 @@
 --
 
 local style = require "core.style"
-local Widget = require "widget"
-local Button = require "widget.button"
+local Widget = require "libraries.widget"
+local Button = require "libraries.widget.button"
 
 local HSPACING = 2
 local VSPACING = 2

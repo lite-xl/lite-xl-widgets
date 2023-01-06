@@ -6,7 +6,7 @@
 
 local core = require "core"
 local style = require "core.style"
-local Widget = require "widget"
+local Widget = require "libraries.widget"
 
 ---@class widget.listbox.column
 ---@field public name string

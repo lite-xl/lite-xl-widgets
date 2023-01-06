@@ -10,7 +10,7 @@ local style = require "core.style"
 local keymap = require "core.keymap"
 local View = require "core.view"
 local RootView = require "core.rootview"
-local ScrollBar = require "widget.scrollbar"
+local ScrollBar = require "libraries.widget.scrollbar"
 
 ---Represents the border of a widget.
 ---@class widget.border

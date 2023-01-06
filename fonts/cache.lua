@@ -1,7 +1,7 @@
 local core = require "core"
 local common = require "core.common"
 local Object = require "core.object"
-local FontInfo = require "widget.fonts.info"
+local FontInfo = require "libraries.widget.fonts.info"
 
 ---@class widget.fonts.cache : core.object
 ---@field fontinfo widget.fonts.info

@@ -8,7 +8,7 @@ local translate = require "core.doc.translate"
 local Doc = require "core.doc"
 local DocView = require "core.docview"
 local View = require "core.view"
-local Widget = require "widget"
+local Widget = require "libraries.widget"
 
 
 ---@class widget.textbox.SingleLineDoc : core.doc
