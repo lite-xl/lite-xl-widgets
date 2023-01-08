@@ -13,9 +13,9 @@ local Widget = require "libraries.widget"
 ---@field public width string
 ---@field public expand boolean
 ---@field public longest integer
-local ListBoxColumn = {}
 
 ---@alias widget.listbox.drawcol fun(self, row, x, y, font, color, only_calc)
+---@alias widget.listbox.filtercb fun(self:widget.listbox, idx:integer, row:widget.listbox.row, data:any):number?
 
 ---@alias widget.listbox.row table<integer, renderer.font|widget.fontreference|renderer.color|integer|string|widget.listbox.drawcol>
 
@@ -24,6 +24,8 @@ local ListBoxColumn = {}
 ---@class widget.listbox : widget
 ---@field rows widget.listbox.row[]
 ---@field private row_data any
+---@field private rows_original widget.listbox.row[]
+---@field private row_data_original any
 ---@field private columns widget.listbox.column[]
 ---@field private positions widget.listbox.colpos[]
 ---@field private mouse widget.position
@@ -55,6 +57,8 @@ function ListBox:new(parent)
   self.scrollable = true
   self.rows = {}
   self.row_data = {}
+  self.rows_original = {}
+  self.row_data_original = {}
   self.columns = {}
   self.positions = {}
   self.selected_row = 0
@@ -67,6 +71,49 @@ function ListBox:new(parent)
   self.last_offset = 0
 
   self:set_size(200, (self:get_font():get_height() + (style.padding.y*2)) * 3)
+end
+
+---Set which rows to show using the specified match string or callback,
+---if nil all rows are restored.
+---@param match? string | widget.listbox.filtercb
+function ListBox:filter(match)
+  if (not match or match == "") and #self.rows_original > 0 then
+    self:clear()
+    for idx, row in ipairs(self.rows_original) do
+      self:add_row(row, self.row_data_original[idx])
+    end
+    self.rows_original = {}
+    self.row_data_original = {}
+    return
+  elseif match and match ~= "" then
+    self.rows_original = #self.rows_original > 0
+      and self.rows_original or self.rows
+    self.row_data_original = #self.row_data_original > 0
+      and self.row_data_original or self.row_data
+
+    self:clear()
+
+    local match_type = type(match)
+
+    local rows = {}
+    for idx, row in ipairs(self.rows_original) do
+      local score
+      if match_type == "function" then
+        score = match(self, idx, row, self.row_data_original[idx])
+      else
+        score = system.fuzzy_match(self:get_row_text(row), match, false)
+      end
+      if score then
+        table.insert(rows, {row, self.row_data_original[idx], score})
+      end
+    end
+
+    table.sort(rows, function(a, b) return a[3] > b[3] end)
+
+    for _, row in ipairs(rows) do
+      self:add_row(row[1], row[2])
+    end
+  end
 end
 
 ---If no width is given column will be set to automatically
@@ -379,12 +426,13 @@ function ListBox:get_row_data(idx)
 end
 
 ---Get the text only of a styled row.
----@param idx integer
+---@param row integer | table
 ---@return string
-function ListBox:get_row_text(idx)
+function ListBox:get_row_text(row)
   local text = ""
-  if self.rows[idx] then
-    for _, element in ipairs(self.rows[idx]) do
+  row = type(row) == "table" and row or self.rows[row]
+  if row then
+    for _, element in ipairs(row) do
       if type(element) == "string" then
         text = text .. element
       elseif element == ListBox.NEWLINE then
@@ -496,6 +544,8 @@ function ListBox:clear()
     col.width = self:get_col_width(cidx)
     col.longest = nil
   end
+
+  self:set_visible_rows()
 end
 
 ---Render or calculate the size of the specified range of elements in a row.
@@ -831,4 +881,3 @@ end
 
 
 return ListBox
-
