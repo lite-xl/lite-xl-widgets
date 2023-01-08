@@ -101,9 +101,9 @@ function TextView:draw()
 end
 
 ---@class widget.textbox : widget
----@field public textview widget.textbox.TextView
----@field public placeholder string
----@field private placeholder_active boolean
+---@field textview widget.textbox.TextView
+---@field placeholder string
+---@field placeholder_active boolean
 local TextBox = Widget:extend()
 
 function TextBox:new(parent, text, placeholder)
@@ -132,7 +132,9 @@ function TextBox:new(parent, text, placeholder)
   local this = self
 
   function self.textview.doc:on_text_change()
-    this:on_change(this:get_text())
+    if not this.placeholder_active then
+      this:on_change(this:get_text())
+    end
   end
 
   -- more granular listening of text changing events
@@ -173,7 +175,6 @@ end
 ---@param select? boolean
 function TextBox:set_text(text, select)
   self.textview:set_text(text, select)
-  self:on_change(text)
 end
 
 --
@@ -229,8 +230,8 @@ end
 function TextBox:activate()
   self.hover_border = style.caret
   if self.placeholder_active then
-    self:set_text("")
     self.placeholder_active = false
+    self:set_text("")
   end
   self.active = true
   core.request_cursor("ibeam")
@@ -240,8 +241,8 @@ function TextBox:deactivate()
   self.hover_border = nil
   self.drag_select = false
   if self:get_text() == "" then
-    self:set_text(self.placeholder)
     self.placeholder_active = true
+    self:set_text(self.placeholder)
   end
   self.active = false
   core.request_cursor("arrow")
@@ -250,7 +251,6 @@ end
 function TextBox:on_text_input(text)
   TextBox.super.on_text_input(self, text)
   self.textview:on_text_input(text)
-  self:on_change(self:get_text())
 end
 
 ---Event fired on any text change event.
@@ -303,4 +303,3 @@ end
 
 
 return TextBox
-
