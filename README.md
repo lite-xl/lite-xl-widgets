@@ -28,6 +28,8 @@ Components currently provided by this plugin are:
 * [Base Widget](init.lua)
 * [Button](button.lua)
 * [CheckBox](checkbox.lua)
+* [ColorPicker](colorpicker.lua)
+* [ColorPickerDialog](colorpickerdialog.lua)
 * [Dialog](dialog.lua)
 * [FilePicker](filepicker.lua)
 * [FoldingBook](foldingbook.lua)
