@@ -61,7 +61,7 @@ local ColorPicker = Widget:extend()
 function ColorPicker:new(parent, color)
   ColorPicker.super.new(self, parent, false)
 
-  self.type_name = "widget.button"
+  self.type_name = "widget.colorpicker"
 
   self.hue_pos = 0
   self.saturation_pos = 100
@@ -248,7 +248,7 @@ function ColorPicker.hsv_to_rgb(h, s, v, a)
 end
 
 ---Converts a css format color string into a renderer.color if possible,
----if conversion fails returns nil.
+---if conversion fails returns nil. Adapted from colorpreview plugin.
 ---@param color string
 ---@return renderer.color? color
 function ColorPicker.color_from_string(color)
