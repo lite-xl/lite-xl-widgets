@@ -29,12 +29,12 @@ function NumberBox:new(parent, value, min, max, step)
 
   self.type_name = "widget.numberbox"
 
-  self.scrollable = true
-
   self:set_range(min, max)
   self:set_step(step)
 
   self.textbox = TextBox(self, "")
+  self.textbox.scrollable = true
+
   self.decrease_button = Button(self, "-")
   self.increase_button = Button(self, "+")
 
@@ -55,6 +55,13 @@ function NumberBox:new(parent, value, min, max, step)
       this.current_text = this.textbox:get_text()
       this:on_change(tonumber(this.current_text))
     end
+  end
+  function self.textbox:on_mouse_wheel(y)
+    if self.active then
+      if y > 0 then this:increase() else this:decrease() end
+      return true
+    end
+    return false
   end
   function self.decrease_button:on_mouse_pressed(button, x, y, clicks)
     if Button.super.on_mouse_pressed(self, button, x, y, clicks) then
@@ -200,14 +207,6 @@ function NumberBox:set_size(width, height)
     -- it shouldn't be needed but for now fixes occasional bottom border cut.
     + self.increase_button.border.width
   )
-end
-
----Increase or decrease the value on mouse wheel.
----@param y integer
-function NumberBox:on_mouse_wheel(y)
-  if not NumberBox.super.on_mouse_wheel(self, y) then return false end
-  if y > 0 then self:increase() else self:decrease() end
-  return true
 end
 
 function NumberBox:update()
