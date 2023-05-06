@@ -7,6 +7,7 @@
 local core = require "core"
 local style = require "core.style"
 local Widget = require "libraries.widget"
+local MessageBox = require "libraries.widget.messagebox"
 
 ---@class widget.listbox.column
 ---@field public name string
@@ -59,6 +60,7 @@ function ListBox:new(parent)
   self.row_data = {}
   self.rows_original = {}
   self.row_data_original = {}
+  self.rows_idx_original = {}
   self.columns = {}
   self.positions = {}
   self.selected_row = 0
@@ -84,12 +86,14 @@ function ListBox:filter(match)
     end
     self.rows_original = {}
     self.row_data_original = {}
+    self.rows_idx_original = {}
     return
   elseif match and match ~= "" then
     self.rows_original = #self.rows_original > 0
       and self.rows_original or self.rows
     self.row_data_original = #self.row_data_original > 0
       and self.row_data_original or self.row_data
+    self.rows_idx_original = {}
 
     self:clear()
 
@@ -104,7 +108,7 @@ function ListBox:filter(match)
         score = system.fuzzy_match(self:get_row_text(row), match, false)
       end
       if score then
-        table.insert(rows, {row, self.row_data_original[idx], score})
+        table.insert(rows, {row, self.row_data_original[idx], score, idx})
       end
     end
 
@@ -112,6 +116,7 @@ function ListBox:filter(match)
 
     for _, row in ipairs(rows) do
       self:add_row(row[1], row[2])
+      table.insert(self.rows_idx_original, row[4])
     end
   end
 end
@@ -331,6 +336,14 @@ end
 function ListBox:remove_row(ridx)
   if not self.rows[ridx] then return end
 
+  if #self.rows_idx_original > 0 then
+    MessageBox.error(
+      "Can not remove row",
+      "Rows can not be removed when the list is filtered."
+    )
+    return
+  end
+
   local last_col = false
   local row_y = self.rows[ridx].y
   local row_h = self.rows[ridx].h
@@ -401,6 +414,9 @@ function ListBox:set_row(idx, row)
   --TODO: recalculate subsequent row sizes and max col width if needed
   if self.rows[idx] then
     self.rows[idx] = row
+    if #self.rows_idx_original > 0 then
+      self.rows_original[self.rows_idx_original[idx]] = row
+    end
     -- precalculate the row size and position
     self:calc_row_size_pos(idx)
   end
@@ -412,6 +428,9 @@ end
 function ListBox:set_row_data(idx, data)
   if self.rows[idx] then
     self.row_data[idx] = data
+    if #self.rows_idx_original > 0 then
+      self.row_data_original[self.rows_idx_original[idx]] = data
+    end
   end
 end
 
