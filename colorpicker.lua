@@ -611,25 +611,29 @@ function ColorPicker:on_mouse_pressed(button, x, y, clicks)
     self.brightness_mouse_down = true
   end
   if self.hue_mouse_down or self.saturation_mouse_down or self.brightness_mouse_down then
+    self:capture_mouse()
     update_control_values(self)
   end
   return true
 end
 
 function ColorPicker:on_mouse_released(button, x, y)
-  if not ColorPicker.super.on_mouse_released(self, button, x, y) then
-    return false
+  if self.hue_mouse_down or self.saturation_mouse_down or self.brightness_mouse_down then
+    self:release_mouse()
   end
+
   self.hue_mouse_down = false
   self.saturation_mouse_down = false
   self.brightness_mouse_down = false
+
+  if not ColorPicker.super.on_mouse_released(self, button, x, y) then
+    return false
+  end
+
   return true
 end
 
 function ColorPicker:on_mouse_moved(x, y, dx, dy)
-  if not ColorPicker.super.on_mouse_moved(self, x, y, dx, dy) then
-    return false
-  end
   if self.hue_mouse_down then
     local sx, sw = self.selector.x, self.selector.w
     self.hue_pos = common.clamp(x, sx, sx + sw)
@@ -651,6 +655,8 @@ function ColorPicker:on_mouse_moved(x, y, dx, dy)
   end
   if self.hue_mouse_down or self.saturation_mouse_down or self.brightness_mouse_down then
     update_control_values(self)
+  else
+    return ColorPicker.super.on_mouse_moved(self, x, y, dx, dy)
   end
   return true
 end

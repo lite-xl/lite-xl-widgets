@@ -88,6 +88,7 @@ local ScrollBar = require "libraries.widget.scrollbar"
 ---@field protected mouse_is_hovering boolean
 ---@field protected mouse_pressed_outside boolean
 ---@field protected is_scrolling boolean
+---@field protected captured_widget widget Widget that captured mouse events
 ---@field protected animations widget.animation[]
 local Widget = View:extend()
 
@@ -798,6 +799,34 @@ function Widget:on_text_input(text)
   return false
 end
 
+---All mouse events will be directly sent to the widget even if mouse moves
+---outside the widget region.
+---@param scrolling boolean Capture for scrolling
+function Widget:capture_mouse(scrolling)
+  local parent = self.parent
+  while parent do
+    -- propagate to parents so if mouse is not on top still
+    -- reach the childrens when the mouse is released
+    if scrolling then parent.is_scrolling = true end
+    parent.captured_widget = self
+    parent = parent.parent
+  end
+  if scrolling then self.is_scrolling = true end
+end
+
+---Undo capture_mouse()
+function Widget:release_mouse()
+  local parent = self.parent
+  while parent do
+    -- propagate to parents so if mouse is not on top still
+    -- reach the childrens when the mouse is released
+    parent.is_scrolling = false
+    parent.captured_widget = nil
+    parent = parent.parent
+  end
+  self.is_scrolling = false
+end
+
 ---Send mouse pressed events to hovered child or starts dragging if enabled.
 ---@param button widget.clicktype
 ---@param x number
@@ -807,15 +836,9 @@ end
 function Widget:on_mouse_pressed(button, x, y, clicks)
   if not self.visible then return false end
 
+  -- Capture when scrollbar is pressed
   if Widget.super.on_mouse_pressed(self, button, x, y, clicks) then
-    local parent = self.parent
-    while parent do
-      -- propagate to parents so if mouse is not on top still
-      -- reach the childrens when the mouse is released
-      parent.is_scrolling = true
-      parent = parent.parent
-    end
-    self.is_scrolling = true
+    self:capture_mouse(true)
     return true
   end
 
@@ -857,22 +880,15 @@ end
 function Widget:on_mouse_released(button, x, y)
   if not self.visible then return false end
 
-  Widget.super.on_mouse_released(self, button, x, y)
-
-  if self.is_scrolling then
-    self.is_scrolling = false
-    local parent = self.parent
-    while parent do
-      parent.is_scrolling = false
-      parent = parent.parent
-    end
-    for _, child in pairs(self.childs) do
-      if child.is_scrolling then
-        child:on_mouse_released(button, x, y)
-      end
+  if self.captured_widget then
+    self.captured_widget:on_mouse_released(button, x, y)
+    if self.is_scrolling then
+      self.captured_widget:release_mouse()
     end
     return true
   end
+
+  Widget.super.on_mouse_released(self, button, x, y)
 
   self:swap_active_child()
 
@@ -956,19 +972,12 @@ function Widget:deactivate() end
 function Widget:on_mouse_moved(x, y, dx, dy)
   if not self.visible then return false end
 
-  Widget.super.on_mouse_moved(self, x, y, dx, dy)
-
-  if self.is_scrolling then
-    if not self:scrollbar_dragging() then
-      for _, child in pairs(self.childs) do
-        if child.is_scrolling then
-          child:on_mouse_moved(x, y, dx, dy)
-          break
-        end
-      end
-    end
+  if self.captured_widget then
+    self.captured_widget:on_mouse_moved(x, y, dx, dy)
     return true
   end
+
+  Widget.super.on_mouse_moved(self, x, y, dx, dy)
 
   -- store latest mouse coordinates for usage on the on_mouse_wheel event.
   self.mouse.x = x
@@ -1062,6 +1071,13 @@ function Widget:on_mouse_leave(x, y, dx, dy)
     if child.mouse_is_hovering then
       child:on_mouse_leave(x, y, dx, dy)
     end
+  end
+end
+
+function Widget:on_mouse_left()
+  if not self.captured_widget then
+    Widget.super.on_mouse_left(self)
+    self:on_mouse_moved(-1, -1, -1, -1)
   end
 end
 
@@ -1382,14 +1398,14 @@ function Widget.override_rootview()
             (moved or not widget:on_mouse_moved(x, y, dx, dy))
           then
               if
-                not widget.is_scrolling
+                not widget.is_scrolling and not widget.captured_widget
                 and
-                not widget.child_active
-                and
-                widget.outside_view
+                not widget.child_active and widget.outside_view
               then
                 core.set_active_view(widget.outside_view)
                 widget.outside_view = nil
+              elseif widget.outside_view then
+                core.request_cursor("arrow")
               end
           elseif not moved then
             if not widget.child_active and widget.defer_draw then
