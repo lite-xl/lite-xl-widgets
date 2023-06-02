@@ -690,7 +690,9 @@ end
 ---@param x number
 ---@param y number
 function Widget:drag(x, y)
-  self:set_position(x - self.position.dx, y - self.position.dy)
+  if self.position.dx and self.position.dy then
+    self:set_position(x - self.position.dx, y - self.position.dy)
+  end
 end
 
 ---Center the widget horizontally and vertically to the screen or parent widget.
@@ -801,7 +803,7 @@ end
 
 ---All mouse events will be directly sent to the widget even if mouse moves
 ---outside the widget region.
----@param scrolling boolean Capture for scrolling
+---@param scrolling? boolean Capture for scrolling
 function Widget:capture_mouse(scrolling)
   local parent = self.parent
   while parent do
@@ -1385,7 +1387,6 @@ function Widget.override_rootview()
   end
 
   function RootView:on_mouse_moved(x, y, dx, dy)
-    local moved  = false
     if core.active_view ~= core.command_view then
       for i=#floating_widgets, 1, -1 do
         local widget = floating_widgets[i]
@@ -1395,7 +1396,7 @@ function Widget.override_rootview()
             or
             widget.mouse_pressed_outside
             or
-            (moved or not widget:on_mouse_moved(x, y, dx, dy))
+            not widget:on_mouse_moved(x, y, dx, dy)
           then
               if
                 not widget.is_scrolling and not widget.captured_widget
@@ -1407,21 +1408,19 @@ function Widget.override_rootview()
               elseif widget.outside_view then
                 core.request_cursor("arrow")
               end
-          elseif not moved then
+          else
             if not widget.child_active and widget.defer_draw then
               if not widget.outside_view then
                 widget.outside_view = core.active_view
               end
               core.set_active_view(widget)
-              moved = true
             end
+            return true
           end
         end
       end
     end
-    if not moved then
-      root_view_on_mouse_moved(self, x, y, dx, dy)
-    end
+    return root_view_on_mouse_moved(self, x, y, dx, dy)
   end
 
   function RootView:on_mouse_wheel(y, x)
