@@ -78,6 +78,8 @@ function ColorPicker:new(parent, color)
 
   self.selector = { x = 0, y = 0, w = 0, h = 0 }
 
+  self:set_border_width(0)
+
   local this = self
   self.html_notation = TextBox(self, "#FF0000")
   self.rgba_notation = TextBox(self, "rgba(255,0,0,1)")
@@ -112,9 +114,10 @@ function ColorPicker:new(parent, color)
     end
   end
 
-  self:set_border_width(0)
-
   self:set_color(color or {255, 0, 0, 255})
+
+  -- set initial child positions and size
+  self:update_size()
 end
 
 ---Converts an RGB color value to HSL. Conversion formula
@@ -399,7 +402,7 @@ function ColorPicker:set_color(color, skip_html, skip_rgba)
       color = ColorPicker.color_from_string(color)
     end
 
-    if not color then return end
+    if not color then color = {255, 0, 0, 255} end
 
     local hsva = ColorPicker.rgb_to_hsv(color)
 
@@ -557,6 +560,8 @@ end
 local function update_control_values(self)
   local color = self:get_color()
   self.alpha = color[4]
+  self.html_updating = true
+  self.rgba_updating = true
   self.html_notation:set_text(string.format(
     "#%02X%02X%02X%02X",
     color[1], color[2], color[3], color[4]
@@ -565,6 +570,8 @@ local function update_control_values(self)
     "rgba(%d,%d,%d,%.2f)",
     color[1], color[2], color[3], color[4] / 255
   ))
+  self.html_updating = false
+  self.rgba_updating = false
   self:on_change(color)
 end
 
@@ -661,8 +668,8 @@ function ColorPicker:on_mouse_moved(x, y, dx, dy)
   return true
 end
 
-function ColorPicker:update()
-  if not ColorPicker.super.update(self) then return false end
+function ColorPicker:update_size()
+  self.selector.h = 10 * SCALE
   local x, y = 0, style.padding.y * 3 + self.selector.h * 4
   self.html_notation:set_position(x, y)
   self.rgba_notation:set_position(self.html_notation:get_right() + style.padding.x, y)
@@ -672,6 +679,11 @@ function ColorPicker:update()
   if self:get_height() < self.rgba_notation:get_bottom() then
     self:set_size(nil, self.rgba_notation:get_bottom() + style.padding.y)
   end
+end
+
+function ColorPicker:update()
+  if not ColorPicker.super.update(self) then return false end
+  self:update_size()
   return true
 end
 
