@@ -19,6 +19,7 @@ local VSPACING = 2
 local NoteBookPane = {}
 
 ---@class widget.notebook : widget
+---@overload fun(parent?:widget):widget.notebook
 ---@field public panes widget.notebook.pane[]
 ---@field public active_pane widget.notebook.pane
 local NoteBook = Widget:extend()

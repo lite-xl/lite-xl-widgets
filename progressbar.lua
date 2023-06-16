@@ -8,6 +8,7 @@ local style = require "core.style"
 local Widget = require "libraries.widget"
 
 ---@class widget.progressbar : widget
+---@overload fun(parent?:widget, percent?:number, width?:number):widget.progressbar
 ---@field public percent number
 ---@field public show_percent boolean
 ---@field private percent_width number
@@ -92,4 +93,3 @@ end
 
 
 return ProgressBar
-

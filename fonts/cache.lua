@@ -4,6 +4,7 @@ local Object = require "core.object"
 local FontInfo = require "libraries.widget.fonts.info"
 
 ---@class widget.fonts.cache : core.object
+---@overload fun():widget.fonts.cache
 ---@field fontinfo widget.fonts.info
 ---@field found integer
 ---@field found_monospaced integer

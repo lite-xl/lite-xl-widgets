@@ -56,6 +56,7 @@ local ScrollBar = require "libraries.widget.scrollbar"
 
 ---A base widget
 ---@class widget : core.view
+---@overload fun(parent?:widget, floating?:boolean):widget
 ---@field public super widget
 ---@field public parent widget | nil
 ---@field public name string
@@ -107,7 +108,7 @@ local floating_widgets = {}
 ---When no parent is given to the widget constructor it will automatically
 ---overwrite RootView methods to intercept system events.
 ---@param parent? widget
----@param floating? boolean | nil
+---@param floating? boolean
 function Widget:new(parent, floating)
   Widget.super.new(self)
 

@@ -11,6 +11,7 @@ local Label = require "libraries.widget.label"
 local TextBox = require "libraries.widget.textbox"
 
 ---@class widget.inputdialog : widget.dialog
+---@overload fun(title?:string, message?:string, text?:string):widget.inputdialog
 ---@field super widget.dialog
 ---@field message widget.label
 ---@field text widget.textbox
@@ -85,4 +86,3 @@ end
 
 
 return InputDialog
-

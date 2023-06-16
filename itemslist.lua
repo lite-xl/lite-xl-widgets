@@ -11,6 +11,7 @@ local InputDialog = require "libraries.widget.inputdialog"
 local MessageBox = require "libraries.widget.messagebox"
 
 ---@class widget.itemslist : widget
+---@overload fun(parent:widget?):widget.itemslist
 ---@field list widget.listbox
 ---@field add widget.button
 ---@field remove widget.button

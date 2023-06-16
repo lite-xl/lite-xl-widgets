@@ -17,6 +17,7 @@ local Button = require "libraries.widget.button"
 local FoldingBookPane = {}
 
 ---@class widget.foldingbook : widget
+---@overload fun(parent:widget?):widget.foldingbook
 ---@field public panes widget.foldingbook.pane[]
 local FoldingBook = Widget:extend()
 

@@ -8,11 +8,13 @@ local Object = require "core.object"
 --------------------------------------------------------------------------------
 
 ---@class widget.fonts.cdata : core.object
+---@overload fun(data:string):widget.fonts.cdata
 ---@field private data string
 ---@field private position integer
 local FontCDATA = Object:extend()
 
 ---@class  widget.fonts.reader : core.object
+---@overload fun(font_path?:string):widget.fonts.reader
 ---@field private file file*
 ---@field private path string
 local FontReader = Object:extend()
@@ -36,6 +38,7 @@ local FontReader = Object:extend()
 ---@field public monospace boolean
 
 ---@class widget.fonts.info : core.object
+---@overload fun(font_path?:string):widget.fonts.info
 ---@field private reader widget.fonts.reader
 ---@field public path string @Path of the font file
 ---@field public data widget.fonts.data[] @Holds the metadata for each of the embedded fonts

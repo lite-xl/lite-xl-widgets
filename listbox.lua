@@ -23,6 +23,7 @@ local MessageBox = require "libraries.widget.messagebox"
 ---@alias widget.listbox.colpos table<integer,integer>
 
 ---@class widget.listbox : widget
+---@overload fun(parent:widget?):widget.listbox
 ---@field rows widget.listbox.row[]
 ---@field private row_data any
 ---@field private rows_original widget.listbox.row[]

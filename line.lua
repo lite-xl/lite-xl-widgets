@@ -8,6 +8,7 @@ local style = require "core.style"
 local Widget = require "libraries.widget"
 
 ---@class widget.line : widget
+---@overload fun(parent?:widget, thickness?:integer, padding?:number):widget.line
 ---@field public padding integer
 ---@field private custom_width number
 local Line = Widget:extend()
@@ -58,4 +59,3 @@ end
 
 
 return Line
-

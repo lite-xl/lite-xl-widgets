@@ -10,6 +10,7 @@ local Button = require "libraries.widget.button"
 local TextBox = require "libraries.widget.textbox"
 
 ---@class widget.numberbox : widget
+---@overload fun(parent?:widget, value:number, min?:number, max?:number, step?:number):widget.numberbox
 ---@field private textbox widget.textbox
 ---@field private decrease_button widget.button
 ---@field private increase_button widget.button

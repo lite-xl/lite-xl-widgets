@@ -12,6 +12,7 @@ local Widget = require "libraries.widget"
 
 
 ---@class widget.textbox.SingleLineDoc : core.doc
+---@overload fun():widget.textbox.SingleLineDoc
 ---@field super core.doc
 local SingleLineDoc = Doc:extend()
 
@@ -20,6 +21,7 @@ function SingleLineDoc:insert(line, col, text)
 end
 
 ---@class widget.textbox.TextView : core.docview
+---@overload fun():widget.textbox.TextView
 ---@field super core.docview
 local TextView = DocView:extend()
 
@@ -101,6 +103,7 @@ function TextView:draw()
 end
 
 ---@class widget.textbox : widget
+---@overload fun(parent?:widget, text?:string, placeholder?:string):widget.textbox
 ---@field textview widget.textbox.TextView
 ---@field placeholder string
 ---@field placeholder_active boolean

@@ -6,6 +6,7 @@
 local CoreScrollBar = require "core.scrollbar"
 
 ---@class widget.scrollbar : core.scrollbar
+---@overload fun(parent?:widget, options?:table):widget.scrollbar
 ---@field super widget.scrollbar
 ---@field widget_parent widget
 local ScrollBar = CoreScrollBar:extend()

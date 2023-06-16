@@ -15,6 +15,7 @@ local MessageBox = require "libraries.widget.messagebox"
 ---@field path string
 
 ---@class widget.fontslist : widget
+---@overload fun(parent?:widget):widget.fontslist
 ---@field list widget.listbox
 ---@field add widget.button
 ---@field remove widget.button

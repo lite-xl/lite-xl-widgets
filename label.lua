@@ -8,6 +8,8 @@ local style = require "core.style"
 local Widget = require "libraries.widget"
 
 ---@class widget.label : widget
+---@overload fun(parent:widget?, label?:string):widget.label
+---@field clickable boolean
 local Label = Widget:extend()
 
 ---Constructor
@@ -91,4 +93,3 @@ end
 
 
 return Label
-

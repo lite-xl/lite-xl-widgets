@@ -41,6 +41,7 @@ local COLOR_BLACK = {0, 0, 0, 255}
 local COLOR_WHITE = {255, 255, 255, 255}
 
 ---@class widget.colorpicker : widget
+---@overload fun(parent:widget?, color?:renderer.color|string):widget.colorpicker
 ---@field hue_color renderer.color
 ---@field saturation_color renderer.color
 ---@field brightness_color renderer.color

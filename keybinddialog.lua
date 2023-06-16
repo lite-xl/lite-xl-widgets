@@ -17,6 +17,7 @@ local MessageBox = require "libraries.widget.messagebox"
 local current_dialog = nil
 
 ---@class widget.keybinddialog : widget.dialog
+---@overload fun():widget.keybinddialog
 ---@field super widget.dialog
 ---@field selected integer
 ---@field shortcuts widget.listbox
@@ -254,4 +255,3 @@ end
 
 
 return KeybindDialog
-

@@ -6,6 +6,7 @@ local Button = require "libraries.widget.button"
 local Label = require "libraries.widget.label"
 
 ---@class widget.filepicker : widget
+---@overload fun(parent?:widget, path?:string):widget.filepicker
 ---@field public pick_mode integer
 ---@field public filters table<integer,string>
 ---@field private path string

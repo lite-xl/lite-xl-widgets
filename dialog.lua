@@ -11,6 +11,7 @@ local Button = require "libraries.widget.button"
 local Label = require "libraries.widget.label"
 
 ---@class widget.dialog : widget
+---@overload fun(title?:string):widget.dialog
 ---@field protected title widget.label
 ---@field protected close widget.button
 ---@field protected panel widget

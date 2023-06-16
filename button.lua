@@ -14,6 +14,7 @@ local Widget = require "libraries.widget"
 local ButtonIcon = {}
 
 ---@class widget.button : widget
+---@overload fun(parent:widget?, label:string?):widget.button
 ---@field public padding widget.position
 ---@field public icon widget.button.icon
 ---@field public expanded boolean
@@ -21,7 +22,7 @@ local Button = Widget:extend()
 
 ---Constructor
 ---@param parent widget
----@param label string
+---@param label? string
 function Button:new(parent, label)
   Button.super.new(self, parent)
 

@@ -14,6 +14,7 @@ local TOGGLE = 15
 local BORDER = 3
 
 ---@class widget.toggle : widget
+---@overload fun(parent?:widget, label?:string, enable?:boolean):widget.toggle
 ---@field public enabled boolean
 ---@field private caption_label widget.textbox
 ---@field private padding integer

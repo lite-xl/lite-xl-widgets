@@ -8,6 +8,7 @@ local style = require "core.style"
 local Widget = require "libraries.widget"
 
 ---@class widget.checkbox : widget
+---@overload fun(parent?:widget, label?:string):widget.checkbox
 ---@field private checked boolean
 local CheckBox = Widget:extend()
 

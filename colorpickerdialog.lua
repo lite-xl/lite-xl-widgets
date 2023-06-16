@@ -10,6 +10,7 @@ local ColorPicker = require "libraries.widget.colorpicker"
 local Dialog = require "libraries.widget.dialog"
 
 ---@class widget.colorpickerdialog : widget.dialog
+---@overload fun(title?:string, color?:renderer.color|string):widget.colorpickerdialog
 ---@field super widget.dialog
 ---@field picker widget.colorpicker
 ---@field apply widget.button

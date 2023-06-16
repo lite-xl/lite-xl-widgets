@@ -20,6 +20,7 @@ local Fonts = require "libraries.widget.fonts"
 ---@field size number
 
 ---@class widget.fontdialog : widget.dialog
+---@overload fun(font?:widget.fontslist.font, options?:widget.fontdialog.fontoptions):widget.fontdialog
 ---@field super widget.dialog
 ---@field fontdata widget.fontslist.font
 ---@field preview widget.label

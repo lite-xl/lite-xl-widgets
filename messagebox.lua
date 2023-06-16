@@ -12,6 +12,7 @@ local Button = require "libraries.widget.button"
 local Label = require "libraries.widget.label"
 
 ---@class widget.messagebox : widget
+---@overload fun(parent?:widget, title?:string, message?:string|widget.styledtext, icon?:widget.messagebox.icontype, icon_color?:renderer.color):widget.messagebox
 ---@field private title widget.label
 ---@field private icon widget.label
 ---@field private message widget.label
