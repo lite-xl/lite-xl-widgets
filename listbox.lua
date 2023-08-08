@@ -858,6 +858,10 @@ function ListBox:draw()
 
   -- Normalize the offset position
   local _, opy = self.parent:get_content_offset()
+  if not self.parent.parent then
+    --TODO: inspect why this workaround needed
+    opy = 0
+  end
   local _, oy = self:get_content_offset()
   oy = oy - opy
   if #self.visible_rows > 0 then
@@ -879,10 +883,9 @@ function ListBox:draw()
       y = y + h
     end
   end
-  core.pop_clip_rect()
 
   if not self.expand then
-    self.largest_row = math.max(new_width, self:get_width() - (self.border.width*2))
+    self.largest_row = self:get_width() - (self.border.width*2)
     self.size.x = self.largest_row
   end
 
@@ -892,6 +895,7 @@ function ListBox:draw()
       font:get_height() + style.padding.y
     )
   end
+  core.pop_clip_rect()
 
   self:draw_border()
   self:draw_scrollbar()
