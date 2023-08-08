@@ -1111,12 +1111,15 @@ function Widget:on_mouse_wheel(y, x)
   else
     local ctrl_pressed = false
     if self.skip_scroll_ctrl and not self.parent then
-      ctrl_pressed = true
       local ctrl_key = PLATFORM == "Mac OS X" and "cmd" or "ctrl"
-      for key, status in pairs(keymap.modkeys) do
-        if (key ~= ctrl_key and status) or (key == ctrl_key and not status) then
-          ctrl_pressed = false
-          break
+      ctrl_pressed = keymap.modkeys[ctrl_key]
+      -- ensure only ctrl/cmd is pressed
+      if ctrl_pressed then
+        for key, status in pairs(keymap.modkeys) do
+          if key ~= ctrl_key and status then
+            ctrl_pressed = false
+            break
+          end
         end
       end
     end
