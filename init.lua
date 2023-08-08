@@ -148,6 +148,7 @@ function Widget:new(parent, floating)
   self.draggable = false
   self.dragged = false
   self.font = "font"
+  self.force_events = {}
   self.tooltip = ""
   self.label = ""
   self.input_text = false
@@ -1348,6 +1349,22 @@ function Widget:destroy()
   end
 end
 
+---Toggle the forced interception of given event even if all the conditions
+---for emitting it are not met.
+---
+---Note: only "mouse_released" is implemented for the moment on floating views
+---for use in the SelectBox, maybe a better system can be implemented on
+---the future.
+---@param name "mouse_released"
+---@param force boolean If omitted is set to true by default
+function Widget:force_event(name, force)
+  if type(force) ~= "boolean" or force then
+    self.force_events[name] = true
+  else
+    self.force_events[name] = nil
+  end
+end
+
 ---Flag that indicates if the rootview events are already overrided.
 ---@type boolean
 local root_overrided = false
@@ -1403,7 +1420,11 @@ function Widget.override_rootview()
         if
           (not widget.defer_draw and not widget.child_active)
           or
-          widget.mouse_pressed_outside
+          (
+            not widget.force_events["mouse_released"]
+            and
+            widget.mouse_pressed_outside
+          )
           or
           not widget:on_mouse_released(button, x, y)
         then
