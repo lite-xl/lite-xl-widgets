@@ -89,6 +89,10 @@ local RootView
 ---@field protected mouse_is_hovering boolean
 ---@field protected mouse_pressed_outside boolean
 ---@field protected is_scrolling boolean
+---By default is set to true to allow ctrl+wheel or cmd+wheel on mac to scale
+---the interface, you can set it to false on your parent widget to allow
+---manually intercepting ctrl+wheel.
+---@field protected skip_scroll_ctrl boolean
 ---@field protected captured_widget widget Widget that captured mouse events
 ---@field protected animations widget.animation[]
 local Widget = View:extend()
@@ -104,6 +108,10 @@ local last_hovered_child = nil
 ---A list of floating widgets that need to receive events.
 ---@type table<integer, widget>
 local floating_widgets = {}
+
+---Flag that indicates if the tooltip is been shown
+---@type boolean
+local widget_showing_tooltip = false
 
 ---When no parent is given to the widget constructor it will automatically
 ---overwrite RootView methods to intercept system events.
@@ -147,6 +155,7 @@ function Widget:new(parent, floating)
   self.mouse = {x = 0, y = 0}
   self.prev_size = {x = 0, y = 0}
   self.is_scrolling = false
+  self.skip_scroll_ctrl = true
 
   self.mouse_is_pressed = false
   self.mouse_is_hovering = false
@@ -883,6 +892,11 @@ end
 function Widget:on_mouse_released(button, x, y)
   if not self.visible then return false end
 
+  if widget_showing_tooltip then
+    widget_showing_tooltip = false
+    core.status_view:remove_tooltip()
+  end
+
   if self.captured_widget then
     self.captured_widget:on_mouse_released(button, x, y)
     if self.is_scrolling then
@@ -1000,10 +1014,11 @@ function Widget:on_mouse_moved(x, y, dx, dy)
       then
         hovered = child
       elseif child.mouse_is_hovering then
-        child.mouse_is_hovering = false
-        if #child.tooltip > 0 then
+        if widget_showing_tooltip then
+          widget_showing_tooltip = false
           core.status_view:remove_tooltip()
         end
+        child.mouse_is_hovering = false
         child:on_mouse_leave(x, y, dx, dy)
         system.set_cursor("arrow")
       end
@@ -1037,6 +1052,7 @@ function Widget:on_mouse_moved(x, y, dx, dy)
       system.set_cursor("arrow")
       self.mouse_is_hovering = true
       if #self.tooltip > 0 then
+        widget_showing_tooltip = true
         core.status_view:show_tooltip(self.tooltip)
       end
       self:on_mouse_enter(x, y, dx, dy)
@@ -1091,6 +1107,19 @@ function Widget:on_mouse_wheel(y, x)
     not self:mouse_on_top(self.mouse.x, self.mouse.y)
   then
     return false
+  else
+    local ctrl_pressed = false
+    if self.skip_scroll_ctrl and not self.parent then
+      ctrl_pressed = true
+      local ctrl_key = PLATFORM == "Mac OS X" and "cmd" or "ctrl"
+      for key, status in pairs(keymap.modkeys) do
+        if (key ~= ctrl_key and status) or (key == ctrl_key and not status) then
+          ctrl_pressed = false
+          break
+        end
+      end
+    end
+    if ctrl_pressed then return false end
   end
 
   for _, child in pairs(self.childs) do
