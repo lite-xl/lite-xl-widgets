@@ -858,8 +858,10 @@ function ListBox:draw()
 
   -- Normalize the offset position
   local _, opy = self.parent:get_content_offset()
-  if not self.parent.parent then
-    --TODO: inspect why this workaround needed
+  if not self.parent.parent and not self.defer_draw then
+    -- TODO: inspect why is this workaround needed
+    -- Without it wrong offset occurs on child listviews of a single parent
+    -- like in the case of the recent projects in EmptyView.
     opy = 0
   end
   local _, oy = self:get_content_offset()
