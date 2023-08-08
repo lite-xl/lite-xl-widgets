@@ -207,6 +207,15 @@ function ListBox:get_scrollable_size()
   return size
 end
 
+function ListBox:get_h_scrollable_size()
+  local size = self.size.x
+  local rows = #self.rows
+  if rows > 0 and self.rows[rows].x then
+    size = math.max(size, self.rows[rows].x + self.rows[rows].w)
+  end
+  return size
+end
+
 ---Detects the rows that are visible each time the content is scrolled,
 ---this way the draw function will only process the visible rows.
 function ListBox:set_visible_rows()
@@ -679,10 +688,12 @@ end
 ---Draw the column headers of the list if available
 ---@param w integer
 ---@param h integer
-function ListBox:draw_header(w, h)
+---@param ox number Horizontal offset
+function ListBox:draw_header(w, h, ox)
   local x = self.position.x
   local y = self.position.y
   renderer.draw_rect(x, y, w, h, style.background2)
+  x = ox + self.position.x
   for _, col in ipairs(self.columns) do
     renderer.draw_text(
       self:get_font(),
@@ -857,21 +868,26 @@ function ListBox:draw()
   end
 
   -- Normalize the offset position
-  local _, opy = self.parent:get_content_offset()
+  local opx, opy = self.parent:get_content_offset()
   if not self.parent.parent and not self.defer_draw then
     -- TODO: inspect why is this workaround needed
     -- Without it wrong offset occurs on child listviews of a single parent
     -- like in the case of the recent projects in EmptyView.
     opy = 0
   end
-  local _, oy = self:get_content_offset()
+
+  local ox, oy = self:get_content_offset()
+
   oy = oy - opy
   if #self.visible_rows > 0 then
     oy = oy + (self.rows[self.visible_rows[1]].y - new_height)
   end
   oy = oy - (self.position.y - self.parent.position.y)
 
-  local x = self.position.x + self.border.width
+  ox = ox - opx
+  ox = ox - (self.position.x - self.parent.position.x)
+
+  local x = ox + self.position.x + self.border.width
   local y = oy + self.position.y + self.border.width + new_height
 
   core.push_clip_rect(
@@ -894,7 +910,8 @@ function ListBox:draw()
   if #self.columns > 0 then
     self:draw_header(
       self.largest_row,
-      font:get_height() + style.padding.y
+      font:get_height() + style.padding.y,
+      ox
     )
   end
   core.pop_clip_rect()
