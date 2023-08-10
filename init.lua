@@ -772,7 +772,7 @@ end
 
 ---The name that is displayed on lite-xl tabs.
 function Widget:get_name()
-  return self.name
+  return self.parent and self.parent:get_name() or self.name
 end
 
 --
