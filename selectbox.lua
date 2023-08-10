@@ -26,6 +26,7 @@ function SelectBox:new(parent, label)
   self.size.x = 200 + (style.padding.x * 2)
   self.size.y = self:get_font():get_height() + (style.padding.y * 2)
   self.list_container = Widget()
+  self.list_container.name = self:get_name()
   self.list_container:set_size(
     self.size.x - self.list_container.border.width,
     150
