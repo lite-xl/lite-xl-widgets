@@ -475,15 +475,9 @@ function SearchReplaceList:draw()
   self.max_width = 0
 
   for i, item, x,y,w,h in self:each_visible_item() do
-    -- recalc max_width for horizontal scrollbar
-    local text = ""
     if item.file then
       file_path = common.relative_path(self.base_dir, item.file.path)
-      text = file_path
-    else
-      text = item.line.line .. ": " .. item.line.text
     end
-    self.max_width = math.max(self.max_width, style.font:get_width(text))
 
     -- add left padding
     x = x + style.padding.x / 2
@@ -533,9 +527,19 @@ function SearchReplaceList:draw()
     end
 
     -- draw text
-    text = item.file and file_path or item.line.text
+    local text = item.file and file_path or item.line.text
+    local all_text = ""
 
     if item.line then
+      local start_pos, end_pos = 1, #text
+      local prefix, postfix = "", ""
+      -- truncate long lines to keep good rendering performance
+      if #text > 120 then
+        start_pos = math.max(item.position.col1 - 50, 1)
+        end_pos = math.min(item.position.col2 + 50, end_pos)
+        if start_pos ~= 1 then prefix = "..." end
+        if end_pos ~= #text then postfix = "..." end
+      end
       x = common.draw_text(
         font,
         style.syntax["number"],
@@ -544,11 +548,11 @@ function SearchReplaceList:draw()
         x, y, w, h
       )
       local start_text = item.position.col1 ~= 1 and
-        text:sub(1, item.position.col1-1)
+        prefix .. text:sub(start_pos, item.position.col1-1)
         or
         ""
       local end_text = item.position.col2 ~= #text and
-        text:sub(item.position.col2+1)
+        text:sub(item.position.col2+1, end_pos) .. postfix
         or
         ""
       local found_text = text:sub(item.position.col1, item.position.col2)
@@ -579,9 +583,14 @@ function SearchReplaceList:draw()
           x, y, w, h
         )
       end
+      all_text = item.line.line .. ": " .. start_text .. found_text .. end_text
     else
       x = common.draw_text(font, text_color, text, "left", x, y, w, h)
+      all_text = file_path
     end
+
+    -- recalc max_width for horizontal scrollbar
+    self.max_width = math.max(self.max_width, style.font:get_width(all_text))
   end
 
   core.pop_clip_rect()
