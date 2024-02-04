@@ -123,19 +123,20 @@ function SearchReplaceList:expand(position, count_results)
     not parent.file.expanded
   then
     local insert_pos = position+1
+    local items = {}
     for _, line in ipairs(parent.file.lines) do
       for _, line_pos in ipairs(line.positions) do
-        table.insert(self.items, insert_pos, {
+        table.insert(items, {
           parent = parent,
           line = line,
           position = line_pos
         })
-        insert_pos = insert_pos + 1
         if count_results then
           self.total_results = self.total_results + 1
         end
       end
     end
+    common.splice(self.items, insert_pos, 0, items)
     parent.file.expanded = true
   end
 end
@@ -149,12 +150,14 @@ function SearchReplaceList:contract(position)
     and
     parent.file.expanded
   then
-    local delete_pos = position+1
+    local start_pos = position+1
+    local end_pos = 0
     for _, line in ipairs(parent.file.lines) do
       for _, _ in ipairs(line.positions) do
-        table.remove(self.items, delete_pos)
+        end_pos = end_pos + 1
       end
     end
+    common.splice(self.items, start_pos, end_pos)
     parent.file.expanded = false
   end
 end
