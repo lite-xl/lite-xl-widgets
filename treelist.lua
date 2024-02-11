@@ -114,6 +114,35 @@ function TreeList:each_item()
   end)
 end
 
+---Retrieve an item by name using the query format:
+---"parent_name>child_name_2>child_name_2>etc..."
+---@param query string
+---@param items? widget.treelist.item[]
+---@param separator? string Use a different separator (default: >)
+---@return widget.treelist.item?
+function TreeList:query_item(query, items, separator)
+  local parent = items or self.items
+  local item = nil
+  separator = separator or ">"
+  for name in query:gmatch("([^"..separator.."]+)") do
+      if parent then
+        local found = false
+        for _, child in ipairs(parent) do
+          if name == child.name then
+            item = child
+            parent = child.childs
+            found = true
+            break
+          end
+        end
+        if not found then return nil end
+      else
+        return nil
+      end
+  end
+  return item
+end
+
 ---Set the active item.
 ---@param selection widget.treelist.item
 ---@param selection_y? number
