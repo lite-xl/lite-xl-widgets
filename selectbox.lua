@@ -4,6 +4,7 @@
 -- @license MIT
 --
 
+local core = require "core"
 local common = require "core.common"
 local style = require "core.style"
 local Widget = require "libraries.widget"
@@ -164,7 +165,7 @@ function SelectBox:reposition_container()
   local y1 = self.position.y + self:get_height()
   local y2 = self.position.y - self.list:get_height()
 
-  local _, h = system.get_window_size()
+  local _, h = system.get_window_size(core.window)
 
   if y1 + self.list:get_height() <= h then
     self.list_container:set_position(

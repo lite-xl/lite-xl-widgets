@@ -708,7 +708,7 @@ end
 
 ---Center the widget horizontally and vertically to the screen or parent widget.
 function Widget:centered()
-  local w, h = system.get_window_size();
+  local w, h = system.get_window_size(core.window);
   if self.parent then
     w = self.parent:get_width()
     h = self.parent:get_height()
