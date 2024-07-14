@@ -354,7 +354,7 @@ function FontInfo.check_is_monospace(font_data)
     if not loaded then
       return false, "could not load font"
     else
-      if fontren:get_width("|") == fontren:get_width("w") then
+      if fontren:get_width("|") == fontren:get_width("W") then
         font_data.monospace = true
       else
         font_data.monospace = false
