@@ -167,8 +167,10 @@ function FontDialog:update_preview()
     self.preview.font = renderer.font.load(
       self.fontdata.path, options.size * SCALE, options
     )
-    if self.fontdata.name then
-      self.preview:set_label(self.fontdata.name)
+    local fontmeta = renderer.font.get_metadata and renderer.font.get_metadata(self.fontdata.path) or {}
+    local preview = fontmeta.sampletext or self.fontdata.name
+    if preview then
+      self.preview:set_label(preview)
     end
   else
     self.preview.font = renderer.font.load(
