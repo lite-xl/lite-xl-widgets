@@ -7,7 +7,7 @@
 local core = require "core"
 local common = require "core.common"
 local style = require "core.style"
-local Widget = require "widget"
+local Widget = require "libraries.widget"
 
 ---@class widget.treelist.item
 ---@field name string
